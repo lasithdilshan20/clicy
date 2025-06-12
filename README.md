@@ -1,0 +1,2 @@
+# clicy
+clicy (CLI + Cypress)
