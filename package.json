@@ -1,0 +1,36 @@
+{
+  "name": "clicy",
+  "version": "0.1.0",
+  "description": "Cypress-based CLI automation tool with REPL",
+  "main": "dist/cli/repl.js",
+  "bin": {
+    "clicy": "dist/bin/clicy.js"
+  },
+  "scripts": {
+    "build": "tsc",
+    "start": "node dist/bin/clicy.js",
+    "dev": "ts-node cli/repl.ts",
+    "cypress:open": "cypress open",
+    "cypress:run": "cypress run",
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "keywords": [
+    "cypress",
+    "cli",
+    "automation",
+    "testing",
+    "repl"
+  ],
+  "author": "",
+  "license": "MIT",
+  "dependencies": {
+    "cypress": "14.4.1",
+    "repl": "^0.1.3",
+    "ts-node": "^10.9.1"
+  },
+  "devDependencies": {
+    "@types/jest": "^29.5.14",
+    "@types/node": "^18.11.9",
+    "typescript": "^4.9.3"
+  }
+}
