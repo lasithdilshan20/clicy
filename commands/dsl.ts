@@ -6,14 +6,15 @@
 export const closeBrowser = () => `// closeBrowser not needed in Cypress`;
 
 // Enhanced goto command that combines openBrowser and goto functionality
-export const goto = (url: string) => {
-  // If URL is empty or undefined, use default URL (equivalent to old openBrowser)
-  if (!url || url === '') {
-    return `cy.visit('/')`;
+// Now accepts no parameters and will prompt for URL when called
+export const goto = (url?: string) => {
+  // If URL is provided, use it
+  if (url && url !== '') {
+    return `cy.visit("${url}");`;
   }
 
-  // Otherwise, visit the specified URL
-  return `cy.visit("${url}");`;
+  // If URL is not provided, it will be prompted for in the REPL
+  return null;
 };
 
 export const click = (label: string) => `cy.contains("${label}").click();`;

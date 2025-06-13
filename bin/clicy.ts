@@ -4,7 +4,7 @@
 
 import { spawn } from 'child_process';
 import path from 'path';
-import '../cli/repl';
+require('../cli/repl');
 
 // Start Cypress in a separate process when REPL starts
 const cypressProcess = spawn('npx', ['cypress', 'open', '--e2e', '--browser', 'chrome'], {
