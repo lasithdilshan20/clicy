@@ -1,10 +1,8 @@
 
 describe('Live Test', () => {
   it('runs REPL steps', () => {
-    // Previous commands
-    
-
-    // Current command (will be highlighted in Cypress)
-    cy.visit("https://www.google.com/");
+    cy.contains("cookies").click();
+    cy.visit("https://trackman.com/");
+    cy.contains("Accept All").click();
   });
 });
