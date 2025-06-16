@@ -4,6 +4,17 @@ import path from 'path';
 import { writeCommandToFile, exportAllToCodeFile, readCommandsFromFile } from '../utils/fileWriter';
 import { click, write, goto, closeBrowser } from '../commands/dsl';
 
+// Color constants for console output
+const colors = {
+  cyan: '\u001b[36m',
+  blue: '\u001b[34m',
+  green: '\u001b[32m',
+  yellow: '\u001b[33m',
+  red: '\u001b[31m',
+  magenta: '\u001b[35m',
+  reset: '\u001b[0m'
+};
+
 const commandHistory: string[] = [];
 
 let isUpdatingFromFileWatch = false;
@@ -22,9 +33,9 @@ function updateCommandHistoryFromFile() {
       commandHistory.push(cmd);
     });
 
-    console.log(`\n\x1b[36mCommand history updated from file (${commands.length} commands)\x1b[0m`);
+    console.log(`\n${colors.cyan}Command history updated from file (${commands.length} commands)${colors.reset}`);
   } catch (error) {
-    console.error('\x1b[31mError updating command history from file:\x1b[0m', error);
+    console.error(`${colors.red}Error updating command history from file:${colors.reset}`, error);
   } finally {
     isUpdatingFromFileWatch = false;
   }
@@ -34,7 +45,7 @@ updateCommandHistoryFromFile();
 
 fs.watch(path.dirname(specPath), (eventType, filename) => {
   if (filename === path.basename(specPath) && !isUpdatingFromFileWatch) {
-    console.log(`\n\x1b[36mSpec file changed (${eventType}), updating command history...\x1b[0m`);
+    console.log(`\n${colors.cyan}Spec file changed (${eventType}), updating command history...${colors.reset}`);
     updateCommandHistoryFromFile();
   }
 });
@@ -46,7 +57,7 @@ let promptState = {
 };
 
 const clicyRepl = repl.start({
-  prompt: 'CliCy > ',
+  prompt: `${colors.cyan}CliCy >${colors.reset} `,
   eval: (cmd, _context, _filename, callback) => {
     const trimmed = cmd.trim();
 
@@ -68,12 +79,12 @@ const clicyRepl = repl.start({
         promptState.isPrompting = false;
         promptState.command = '';
 
-        return callback(null, `\x1b[32mCommand added: goto("${url}")\x1b[0m`);
+        return callback(null, `${colors.green}Command added: goto("${url}")${colors.reset}`);
       } else {
         promptState.isPrompting = false;
         promptState.command = '';
 
-        return callback(null, '\x1b[31mInvalid URL. Please try again with goto()\x1b[0m');
+        return callback(null, `${colors.red}Invalid URL. Please try again with goto()${colors.reset}`);
       }
     }
 
@@ -81,7 +92,7 @@ const clicyRepl = repl.start({
       if (trimmed === '.exit') process.exit(0);
       if (trimmed === '.code') {
         exportAllToCodeFile(commandHistory);
-        return callback(null, '\x1b[32m[+] Code exported!\x1b[0m');
+        return callback(null, `${colors.green}[+] Code exported!${colors.reset}`);
       }
       if (trimmed === '.reset') {
         commandHistory.length = 0;
@@ -101,10 +112,10 @@ describe('Live Test', () => {
           isUpdatingFromFileWatch = false;
         }, 100);
 
-        return callback(null, '\x1b[35mAll commands have been removed. Start with a fresh slate.\x1b[0m');
+        return callback(null, `${colors.magenta}All commands have been removed. Start with a fresh slate.${colors.reset}`);
       }
 
-      return callback(null, `\x1b[31mInvalid REPL keyword: ${trimmed}\x1b[0m`);
+      return callback(null, `${colors.red}Invalid REPL keyword: ${trimmed}${colors.reset}`);
     }
 
     try {
@@ -115,7 +126,7 @@ describe('Live Test', () => {
         promptState.command = 'goto';
         promptState.callback = callback;
 
-        return callback(null, '\x1b[33mPlease enter the URL:\x1b[0m');
+        return callback(null, `${colors.yellow}Please enter the URL:${colors.reset}`);
       }
 
       if (jsLine) {
@@ -129,9 +140,9 @@ describe('Live Test', () => {
           isUpdatingFromFileWatch = false;
         }, 100);
 
-        callback(null, '\x1b[32mCommand added\x1b[0m');
+        callback(null, `${colors.green}Command added${colors.reset}`);
       } else {
-        callback(null, '\x1b[31mUnknown command\x1b[0m');
+        callback(null, `${colors.red}Unknown command${colors.reset}`);
       }
     } catch (err) {
       callback(err as Error, undefined);

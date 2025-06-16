@@ -1,6 +1,17 @@
 import fs from 'fs';
 import path from 'path';
 
+// Color constants for console output
+const colors = {
+  cyan: '\u001b[36m',
+  blue: '\u001b[34m',
+  green: '\u001b[32m',
+  yellow: '\u001b[33m',
+  red: '\u001b[31m',
+  magenta: '\u001b[35m',
+  reset: '\u001b[0m'
+};
+
 const specPath = path.join(process.cwd(), 'cypress', 'e2e', 'live.cy.ts');
 const exportPath = path.join(process.cwd(), 'generatedCode.cy.ts');
 
@@ -18,7 +29,7 @@ describe('Live Test', () => {
 `;
   fs.writeFileSync(specPath, content);
 
-  console.log(`\n\x1b[36mExecuting in Cypress: ${cmd}\x1b[0m`);
+  console.log(`\n${colors.cyan}Executing in Cypress: ${cmd}${colors.reset}`);
 }
 
 export function readCommandsFromFile(): string[] {
@@ -41,7 +52,7 @@ export function readCommandsFromFile(): string[] {
 
     return commands;
   } catch (error) {
-    console.error('\x1b[31mError reading commands from file:\x1b[0m', error);
+    console.error(`${colors.red}Error reading commands from file:${colors.reset}`, error);
     return [];
   }
 }
@@ -55,5 +66,5 @@ describe('Generated from CLICY', () => {
 });
 `;
   fs.writeFileSync(exportPath, code);
-  console.log(`\x1b[32mCode exported to ${exportPath}\x1b[0m`);
+  console.log(`${colors.green}Code exported to ${exportPath}${colors.reset}`);
 }
