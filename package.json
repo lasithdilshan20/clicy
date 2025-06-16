@@ -14,6 +14,7 @@
     "cypress:run": "cypress run",
     "clicy:server": "ts-node cli/server.ts",
     "clicy:test": "cypress open --e2e --browser chrome",
+    "clicy:start": "ts-node start.ts",
     "test": "echo \"Error: no test specified\" && exit 1"
   },
   "keywords": [

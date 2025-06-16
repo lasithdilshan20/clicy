@@ -8,6 +8,8 @@ const ICONS = {
   run: `<svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polygon points="5 3 19 12 5 21 5 3"></polygon></svg>`,
   export: `<svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"></path><polyline points="7 10 12 15 17 10"></polyline><line x1="12" y1="15" x2="12" y2="3"></line></svg>`,
   reset: `<svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 2v6h6"></path><path d="M3 13a9 9 0 1 0 3-7.7L3 8"></path></svg>`,
+  success: `<svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="#4CAF50" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M22 11.08V12a10 10 0 1 1-5.93-9.14"></path><polyline points="22 4 12 14.01 9 11.01"></polyline></svg>`,
+  error: `<svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="#f44336" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"></circle><line x1="15" y1="9" x2="9" y2="15"></line><line x1="9" y1="9" x2="15" y2="15"></line></svg>`,
 };
 
 // Define available commands for autocomplete
@@ -32,6 +34,160 @@ Cypress.on('test:before:run', () => {
     console.log('[CLICY DEBUG] Removing existing UI');
     existingUI.remove();
   }
+
+  // Check if the server is running
+  console.log('[CLICY DEBUG] Checking if server is running...');
+
+  // Function to check server connection with retries
+  const checkServerWithRetries = (retries = 5, delay = 1000) => {
+    console.log(`[CLICY DEBUG] Checking server connection (attempt ${6 - retries}/5)...`);
+
+    fetch('http://localhost:4000/commands', { 
+      method: 'GET',
+      signal: AbortSignal.timeout(1000)
+    })
+      .then(() => {
+        console.log('[CLICY DEBUG] Server is running');
+      })
+      .catch(error => {
+        console.error(`[CLICY DEBUG] Server connection attempt ${6 - retries} failed:`, error);
+
+        if (retries > 1) {
+          // Try again after delay
+          setTimeout(() => checkServerWithRetries(retries - 1, delay), delay);
+        } else {
+          // All retries failed, show notification
+          console.error('[CLICY DEBUG] All server connection attempts failed');
+
+          // Create a notification at the top of the screen
+          const notification = window.top.document.createElement('div');
+          notification.id = 'clicy-server-notification';
+          notification.style.cssText = `
+            position: fixed;
+            top: 0;
+            left: 0;
+            right: 0;
+            background: rgba(255, 152, 0, 0.9); /* Orange for warning instead of red */
+            color: white;
+            padding: 12px 20px;
+            font-family: Arial, sans-serif;
+            font-size: 14px;
+            z-index: 100000;
+            text-align: center;
+            box-shadow: 0 2px 10px rgba(0, 0, 0, 0.2);
+            display: flex;
+            justify-content: center;
+            align-items: center;
+          `;
+
+          const messageSpan = window.top.document.createElement('span');
+          messageSpan.textContent = 'Waiting for Clicy server to start... Commands will not work until the server is ready.';
+
+          const retryButton = window.top.document.createElement('button');
+          retryButton.textContent = 'Retry Connection';
+          retryButton.style.cssText = `
+            margin-left: 16px;
+            padding: 6px 12px;
+            background: white;
+            color: #FF9800;
+            border: none;
+            border-radius: 4px;
+            cursor: pointer;
+            font-weight: bold;
+            transition: background-color 0.2s;
+          `;
+
+          retryButton.addEventListener('mouseover', () => {
+            retryButton.style.backgroundColor = '#f5f5f5';
+          });
+
+          retryButton.addEventListener('mouseout', () => {
+            retryButton.style.backgroundColor = 'white';
+          });
+
+          retryButton.addEventListener('click', () => {
+            // Update message to show we're retrying
+            messageSpan.textContent = 'Retrying connection to Clicy server...';
+            retryButton.disabled = true;
+            retryButton.style.opacity = '0.5';
+
+            // Check if the server is now running
+            fetch('http://localhost:4000/commands', { method: 'GET' })
+              .then(() => {
+                // Server is running now, update notification
+                notification.style.backgroundColor = 'rgba(76, 175, 80, 0.9)';
+                messageSpan.textContent = 'Server is now running! Clicy commands will work.';
+                retryButton.style.display = 'none';
+
+                // Add a close button
+                const closeButton = window.top.document.createElement('button');
+                closeButton.textContent = '✕';
+                closeButton.style.cssText = `
+                  margin-left: 16px;
+                  width: 24px;
+                  height: 24px;
+                  background: transparent;
+                  color: white;
+                  border: 1px solid white;
+                  border-radius: 50%;
+                  cursor: pointer;
+                  display: flex;
+                  align-items: center;
+                  justify-content: center;
+                  font-size: 12px;
+                `;
+
+                closeButton.addEventListener('click', () => {
+                  notification.remove();
+                });
+
+                notification.appendChild(closeButton);
+
+                // Auto-remove after 3 seconds
+                setTimeout(() => {
+                  notification.remove();
+                }, 3000);
+              })
+              .catch(() => {
+                // Server still not running, update the message
+                messageSpan.textContent = 'Server still not responding. The server should start automatically, but it may take longer than expected.';
+                retryButton.disabled = false;
+                retryButton.style.opacity = '1';
+              });
+          });
+
+          const closeButton = window.top.document.createElement('button');
+          closeButton.textContent = '✕';
+          closeButton.style.cssText = `
+            margin-left: 16px;
+            width: 24px;
+            height: 24px;
+            background: transparent;
+            color: white;
+            border: 1px solid white;
+            border-radius: 50%;
+            cursor: pointer;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 12px;
+          `;
+
+          closeButton.addEventListener('click', () => {
+            notification.remove();
+          });
+
+          notification.appendChild(messageSpan);
+          notification.appendChild(retryButton);
+          notification.appendChild(closeButton);
+
+          window.top.document.body.appendChild(notification);
+        }
+      });
+  };
+
+  // Start checking with retries
+  checkServerWithRetries();
 
   // Check if we have a saved collapsed state
   const isCollapsed = window.top.localStorage.getItem('clicy-collapsed') === 'true';
@@ -72,7 +228,7 @@ Cypress.on('test:before:run', () => {
 
   // Create the title
   const title = window.top.document.createElement('div');
-  title.textContent = 'Clicy Commands';
+  title.textContent = 'CliCy Commands';
   title.style.cssText = `
     font-weight: 600;
     font-size: 14px;
@@ -143,6 +299,7 @@ Cypress.on('test:before:run', () => {
   const inputContainer = window.top.document.createElement('div');
   inputContainer.style.cssText = `
     display: flex;
+    flex-direction: column;
     margin-bottom: 16px;
     position: relative;
   `;
@@ -158,11 +315,50 @@ Cypress.on('test:before:run', () => {
     color: #e0e0e0;
     background: rgba(0, 0, 0, 0.2);
     border: 1px solid rgba(255, 255, 255, 0.1);
-    border-radius: 8px;
+    border-radius: 8px 8px 0 0;
     outline: none;
     transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
     box-shadow: inset 0 1px 3px rgba(0, 0, 0, 0.2);
   `;
+
+  // Create the command preview area
+  const commandPreview = window.top.document.createElement('div');
+  commandPreview.id = 'clicy-preview';
+  commandPreview.style.cssText = `
+    padding: 8px 16px;
+    font-family: 'Consolas', monospace;
+    font-size: 13px;
+    color: rgba(255, 255, 255, 0.7);
+    background: rgba(0, 0, 0, 0.3);
+    border: 1px solid rgba(255, 255, 255, 0.1);
+    border-top: none;
+    border-radius: 0 0 8px 8px;
+    min-height: 20px;
+    transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+    overflow-x: auto;
+    white-space: nowrap;
+  `;
+  commandPreview.textContent = 'Preview: cy.';
+
+  // Add a label for the preview
+  const previewLabel = window.top.document.createElement('span');
+  previewLabel.style.cssText = `
+    color: rgba(255, 255, 255, 0.5);
+    margin-right: 8px;
+  `;
+  previewLabel.textContent = 'Preview: ';
+
+  // Add the actual preview content
+  const previewContent = window.top.document.createElement('span');
+  previewContent.style.cssText = `
+    color: #4a88ff;
+  `;
+  previewContent.textContent = 'cy.';
+
+  // Clear the preview and add the label and content
+  commandPreview.textContent = '';
+  commandPreview.appendChild(previewLabel);
+  commandPreview.appendChild(previewContent);
 
   // Add focus effect
   commandInput.addEventListener('focus', () => {
@@ -619,13 +815,49 @@ Cypress.on('test:before:run', () => {
       .then(data => {
         console.log(`[CLICY DEBUG] Server response data:`, data);
         if (data.success) {
-          statusMessage.textContent = 'Command executed successfully';
+          // Create success message with icon
+          statusMessage.innerHTML = '';
+
+          const iconSpan = window.top.document.createElement('span');
+          iconSpan.innerHTML = ICONS.success;
+          iconSpan.style.cssText = `
+            margin-right: 8px;
+            vertical-align: middle;
+          `;
+
+          const textSpan = window.top.document.createElement('span');
+          textSpan.textContent = 'Command executed successfully';
+          textSpan.style.cssText = `
+            vertical-align: middle;
+          `;
+
+          statusMessage.appendChild(iconSpan);
+          statusMessage.appendChild(textSpan);
+
           statusMessage.style.borderLeftColor = '#4CAF50';
           statusMessage.style.backgroundColor = 'rgba(76, 175, 80, 0.1)';
           statusMessage.style.color = 'rgba(255, 255, 255, 0.9)';
           commandInput.value = '';
         } else {
-          statusMessage.textContent = `Error: ${data.error}`;
+          // Create error message with icon
+          statusMessage.innerHTML = '';
+
+          const iconSpan = window.top.document.createElement('span');
+          iconSpan.innerHTML = ICONS.error;
+          iconSpan.style.cssText = `
+            margin-right: 8px;
+            vertical-align: middle;
+          `;
+
+          const textSpan = window.top.document.createElement('span');
+          textSpan.textContent = `Error: ${data.error}`;
+          textSpan.style.cssText = `
+            vertical-align: middle;
+          `;
+
+          statusMessage.appendChild(iconSpan);
+          statusMessage.appendChild(textSpan);
+
           statusMessage.style.borderLeftColor = '#f44336';
           statusMessage.style.backgroundColor = 'rgba(244, 67, 54, 0.1)';
           statusMessage.style.color = 'rgba(255, 255, 255, 0.9)';
@@ -633,7 +865,187 @@ Cypress.on('test:before:run', () => {
       })
       .catch(error => {
         console.error(`[CLICY DEBUG] Fetch error:`, error);
-        statusMessage.textContent = `Error: ${error.message}. Make sure the server is running (npm run clicy:server)`;
+
+        // Clear the status message
+        statusMessage.innerHTML = '';
+
+        // Create error message with icon
+        const iconSpan = window.top.document.createElement('span');
+        iconSpan.innerHTML = ICONS.error;
+        iconSpan.style.cssText = `
+          margin-right: 8px;
+          vertical-align: middle;
+        `;
+
+        const textSpan = window.top.document.createElement('span');
+        textSpan.textContent = `Error: ${error.message}. Waiting for server to respond...`;
+        textSpan.style.cssText = `
+          vertical-align: middle;
+        `;
+
+        statusMessage.appendChild(iconSpan);
+        statusMessage.appendChild(textSpan);
+
+        // Add a button to retry the connection
+        const startServerButton = window.top.document.createElement('button');
+        startServerButton.textContent = 'Retry Connection';
+        startServerButton.style.cssText = `
+          margin-left: 10px;
+          padding: 4px 8px;
+          background: #4a88ff;
+          color: white;
+          border: none;
+          border-radius: 4px;
+          cursor: pointer;
+          font-size: 12px;
+        `;
+
+        startServerButton.addEventListener('click', () => {
+          // Update status message
+          statusMessage.innerHTML = '';
+          const loadingSpan = window.top.document.createElement('span');
+          loadingSpan.textContent = 'Starting server...';
+          statusMessage.appendChild(loadingSpan);
+          statusMessage.style.borderLeftColor = '#2196F3';
+          statusMessage.style.backgroundColor = 'rgba(33, 150, 243, 0.1)';
+          statusMessage.style.color = 'rgba(255, 255, 255, 0.9)';
+
+          // Start the server using the start.ts script
+          try {
+            // Use fetch to call a local endpoint that will trigger the server start
+            // This is just a ping to see if we can reach the server after a delay
+            setTimeout(() => {
+              // Open a new window to run the npm command
+              const serverWindow = window.top.open('', '_blank');
+              if (serverWindow) {
+                serverWindow.document.write(`
+                  <html>
+                    <head>
+                      <title>Starting Clicy Server</title>
+                      <style>
+                        body { 
+                          font-family: Arial, sans-serif; 
+                          background: #1a2530;
+                          color: white;
+                          padding: 20px;
+                        }
+                        pre {
+                          background: rgba(0,0,0,0.2);
+                          padding: 10px;
+                          border-radius: 4px;
+                          overflow: auto;
+                        }
+                      </style>
+                    </head>
+                    <body>
+                      <h2>Starting Clicy Server</h2>
+                      <p>Please keep this window open while using Clicy.</p>
+                      <p>You can close this window when you're done using Clicy.</p>
+                      <p>Running: <code>npm run clicy:server</code></p>
+                      <pre id="output">Starting server...\n</pre>
+                      <script>
+                        // This script would ideally start the server, but browser security prevents it
+                        // Instead, we'll show instructions
+                        document.getElementById('output').textContent += 'For security reasons, the browser cannot start the server automatically.\\n\\n';
+                        document.getElementById('output').textContent += 'Please open a terminal and run:\\n';
+                        document.getElementById('output').textContent += 'npm run clicy:server\\n\\n';
+                        document.getElementById('output').textContent += 'Or use the combined command that starts both server and Cypress:\\n';
+                        document.getElementById('output').textContent += 'npm run clicy:start\\n';
+                      </script>
+                    </body>
+                  </html>
+                `);
+                serverWindow.document.close();
+              }
+
+              // Check if the server is now running
+              fetch('http://localhost:4000/commands', { method: 'GET' })
+                .then(() => {
+                  // Server is running now
+                  statusMessage.innerHTML = '';
+                  const successSpan = window.top.document.createElement('span');
+                  successSpan.innerHTML = ICONS.success;
+                  successSpan.style.cssText = `
+                    margin-right: 8px;
+                    vertical-align: middle;
+                  `;
+
+                  const successTextSpan = window.top.document.createElement('span');
+                  successTextSpan.textContent = 'Server started successfully! Try your command again.';
+                  successTextSpan.style.cssText = `
+                    vertical-align: middle;
+                  `;
+
+                  statusMessage.appendChild(successSpan);
+                  statusMessage.appendChild(successTextSpan);
+                  statusMessage.style.borderLeftColor = '#4CAF50';
+                  statusMessage.style.backgroundColor = 'rgba(76, 175, 80, 0.1)';
+                  statusMessage.style.color = 'rgba(255, 255, 255, 0.9)';
+                })
+                .catch(() => {
+                  // Server still not running
+                  statusMessage.innerHTML = '';
+                  const errorSpan = window.top.document.createElement('span');
+                  errorSpan.innerHTML = ICONS.error;
+                  errorSpan.style.cssText = `
+                    margin-right: 8px;
+                    vertical-align: middle;
+                  `;
+
+                  const errorTextSpan = window.top.document.createElement('span');
+                  errorTextSpan.textContent = 'Could not start server automatically. Please run "npm run clicy:server" in a terminal, or use "npm run clicy:start" to start both server and Cypress.';
+                  errorTextSpan.style.cssText = `
+                    vertical-align: middle;
+                  `;
+
+                  statusMessage.appendChild(errorSpan);
+                  statusMessage.appendChild(errorTextSpan);
+                  statusMessage.style.borderLeftColor = '#f44336';
+                  statusMessage.style.backgroundColor = 'rgba(244, 67, 54, 0.1)';
+                  statusMessage.style.color = 'rgba(255, 255, 255, 0.9)';
+                });
+            }, 2000);
+          } catch (err) {
+            console.error('[CLICY DEBUG] Error starting server:', err);
+            statusMessage.innerHTML = '';
+            const errorSpan = window.top.document.createElement('span');
+            errorSpan.innerHTML = ICONS.error;
+            errorSpan.style.cssText = `
+              margin-right: 8px;
+              vertical-align: middle;
+            `;
+
+            const errorTextSpan = window.top.document.createElement('span');
+            errorTextSpan.textContent = `Error starting server: ${err.message}. Please run "npm run clicy:server" in a terminal, or use "npm run clicy:start" to start both server and Cypress.`;
+            errorTextSpan.style.cssText = `
+              vertical-align: middle;
+            `;
+
+            statusMessage.appendChild(errorSpan);
+            statusMessage.appendChild(errorTextSpan);
+            statusMessage.style.borderLeftColor = '#f44336';
+            statusMessage.style.backgroundColor = 'rgba(244, 67, 54, 0.1)';
+            statusMessage.style.color = 'rgba(255, 255, 255, 0.9)';
+          }
+        });
+
+        statusMessage.appendChild(startServerButton);
+
+        // Add a link to the documentation
+        const docLink = window.top.document.createElement('a');
+        docLink.href = 'https://github.com/yourusername/clicy#troubleshooting';
+        docLink.target = '_blank';
+        docLink.textContent = 'View troubleshooting guide';
+        docLink.style.cssText = `
+          margin-left: 10px;
+          color: #4a88ff;
+          text-decoration: underline;
+          cursor: pointer;
+          font-size: 12px;
+        `;
+
+        statusMessage.appendChild(docLink);
+
         statusMessage.style.borderLeftColor = '#f44336';
         statusMessage.style.backgroundColor = 'rgba(244, 67, 54, 0.1)';
         statusMessage.style.color = 'rgba(255, 255, 255, 0.9)';
@@ -657,23 +1069,239 @@ Cypress.on('test:before:run', () => {
       .then(response => response.json())
       .then(data => {
         if (data.success) {
-          statusMessage.textContent = 'Commands exported successfully';
+          // Create success message with icon
+          statusMessage.innerHTML = '';
+
+          const iconSpan = window.top.document.createElement('span');
+          iconSpan.innerHTML = ICONS.success;
+          iconSpan.style.cssText = `
+            margin-right: 8px;
+            vertical-align: middle;
+          `;
+
+          const textSpan = window.top.document.createElement('span');
+          textSpan.textContent = 'Commands exported successfully';
+          textSpan.style.cssText = `
+            vertical-align: middle;
+          `;
+
+          statusMessage.appendChild(iconSpan);
+          statusMessage.appendChild(textSpan);
+
           statusMessage.style.borderLeftColor = '#4CAF50';
           statusMessage.style.backgroundColor = 'rgba(76, 175, 80, 0.1)';
           statusMessage.style.color = 'rgba(255, 255, 255, 0.9)';
         } else {
-          statusMessage.textContent = `Error: ${data.error}`;
+          // Create error message with icon
+          statusMessage.innerHTML = '';
+
+          const iconSpan = window.top.document.createElement('span');
+          iconSpan.innerHTML = ICONS.error;
+          iconSpan.style.cssText = `
+            margin-right: 8px;
+            vertical-align: middle;
+          `;
+
+          const textSpan = window.top.document.createElement('span');
+          textSpan.textContent = `Error: ${data.error}`;
+          textSpan.style.cssText = `
+            vertical-align: middle;
+          `;
+
+          statusMessage.appendChild(iconSpan);
+          statusMessage.appendChild(textSpan);
+
           statusMessage.style.borderLeftColor = '#f44336';
           statusMessage.style.backgroundColor = 'rgba(244, 67, 54, 0.1)';
           statusMessage.style.color = 'rgba(255, 255, 255, 0.9)';
         }
       })
       .catch(error => {
-        statusMessage.textContent = `Error: ${error.message}. Make sure the server is running (npm run clicy:server)`;
+        console.error('Export error:', error);
+
+        // Clear the status message
+        statusMessage.innerHTML = '';
+
+        // Create error message with icon
+        const iconSpan = window.top.document.createElement('span');
+        iconSpan.innerHTML = ICONS.error;
+        iconSpan.style.cssText = `
+          margin-right: 8px;
+          vertical-align: middle;
+        `;
+
+        const textSpan = window.top.document.createElement('span');
+        textSpan.textContent = `Error: ${error.message}. Waiting for server to respond...`;
+        textSpan.style.cssText = `
+          vertical-align: middle;
+        `;
+
+        statusMessage.appendChild(iconSpan);
+        statusMessage.appendChild(textSpan);
+
+        // Add a button to retry the connection
+        const startServerButton = window.top.document.createElement('button');
+        startServerButton.textContent = 'Retry Connection';
+        startServerButton.style.cssText = `
+          margin-left: 10px;
+          padding: 4px 8px;
+          background: #4a88ff;
+          color: white;
+          border: none;
+          border-radius: 4px;
+          cursor: pointer;
+          font-size: 12px;
+        `;
+
+        startServerButton.addEventListener('click', () => {
+          // Update status message
+          statusMessage.innerHTML = '';
+          const loadingSpan = window.top.document.createElement('span');
+          loadingSpan.textContent = 'Starting server...';
+          statusMessage.appendChild(loadingSpan);
+          statusMessage.style.borderLeftColor = '#2196F3';
+          statusMessage.style.backgroundColor = 'rgba(33, 150, 243, 0.1)';
+          statusMessage.style.color = 'rgba(255, 255, 255, 0.9)';
+
+          // Start the server using the start.ts script
+          try {
+            // Use fetch to call a local endpoint that will trigger the server start
+            // This is just a ping to see if we can reach the server after a delay
+            setTimeout(() => {
+              // Open a new window to run the npm command
+              const serverWindow = window.top.open('', '_blank');
+              if (serverWindow) {
+                serverWindow.document.write(`
+                  <html>
+                    <head>
+                      <title>Starting Clicy Server</title>
+                      <style>
+                        body { 
+                          font-family: Arial, sans-serif; 
+                          background: #1a2530;
+                          color: white;
+                          padding: 20px;
+                        }
+                        pre {
+                          background: rgba(0,0,0,0.2);
+                          padding: 10px;
+                          border-radius: 4px;
+                          overflow: auto;
+                        }
+                      </style>
+                    </head>
+                    <body>
+                      <h2>Starting Clicy Server</h2>
+                      <p>Please keep this window open while using Clicy.</p>
+                      <p>You can close this window when you're done using Clicy.</p>
+                      <p>Running: <code>npm run clicy:server</code></p>
+                      <pre id="output">Starting server...\n</pre>
+                      <script>
+                        // This script would ideally start the server, but browser security prevents it
+                        // Instead, we'll show instructions
+                        document.getElementById('output').textContent += 'For security reasons, the browser cannot start the server automatically.\\n\\n';
+                        document.getElementById('output').textContent += 'Please open a terminal and run:\\n';
+                        document.getElementById('output').textContent += 'npm run clicy:server\\n\\n';
+                        document.getElementById('output').textContent += 'Or use the combined command that starts both server and Cypress:\\n';
+                        document.getElementById('output').textContent += 'npm run clicy:start\\n';
+                      </script>
+                    </body>
+                  </html>
+                `);
+                serverWindow.document.close();
+              }
+
+              // Check if the server is now running
+              fetch('http://localhost:4000/commands', { method: 'GET' })
+                .then(() => {
+                  // Server is running now
+                  statusMessage.innerHTML = '';
+                  const successSpan = window.top.document.createElement('span');
+                  successSpan.innerHTML = ICONS.success;
+                  successSpan.style.cssText = `
+                    margin-right: 8px;
+                    vertical-align: middle;
+                  `;
+
+                  const successTextSpan = window.top.document.createElement('span');
+                  successTextSpan.textContent = 'Server started successfully! Try your command again.';
+                  successTextSpan.style.cssText = `
+                    vertical-align: middle;
+                  `;
+
+                  statusMessage.appendChild(successSpan);
+                  statusMessage.appendChild(successTextSpan);
+                  statusMessage.style.borderLeftColor = '#4CAF50';
+                  statusMessage.style.backgroundColor = 'rgba(76, 175, 80, 0.1)';
+                  statusMessage.style.color = 'rgba(255, 255, 255, 0.9)';
+                })
+                .catch(() => {
+                  // Server still not running
+                  statusMessage.innerHTML = '';
+                  const errorSpan = window.top.document.createElement('span');
+                  errorSpan.innerHTML = ICONS.error;
+                  errorSpan.style.cssText = `
+                    margin-right: 8px;
+                    vertical-align: middle;
+                  `;
+
+                  const errorTextSpan = window.top.document.createElement('span');
+                  errorTextSpan.textContent = 'Could not start server automatically. Please run "npm run clicy:server" in a terminal, or use "npm run clicy:start" to start both server and Cypress.';
+                  errorTextSpan.style.cssText = `
+                    vertical-align: middle;
+                  `;
+
+                  statusMessage.appendChild(errorSpan);
+                  statusMessage.appendChild(errorTextSpan);
+                  statusMessage.style.borderLeftColor = '#f44336';
+                  statusMessage.style.backgroundColor = 'rgba(244, 67, 54, 0.1)';
+                  statusMessage.style.color = 'rgba(255, 255, 255, 0.9)';
+                });
+            }, 2000);
+          } catch (err) {
+            console.error('[CLICY DEBUG] Error starting server:', err);
+            statusMessage.innerHTML = '';
+            const errorSpan = window.top.document.createElement('span');
+            errorSpan.innerHTML = ICONS.error;
+            errorSpan.style.cssText = `
+              margin-right: 8px;
+              vertical-align: middle;
+            `;
+
+            const errorTextSpan = window.top.document.createElement('span');
+            errorTextSpan.textContent = `Error starting server: ${err.message}. Please run "npm run clicy:server" in a terminal, or use "npm run clicy:start" to start both server and Cypress.`;
+            errorTextSpan.style.cssText = `
+              vertical-align: middle;
+            `;
+
+            statusMessage.appendChild(errorSpan);
+            statusMessage.appendChild(errorTextSpan);
+            statusMessage.style.borderLeftColor = '#f44336';
+            statusMessage.style.backgroundColor = 'rgba(244, 67, 54, 0.1)';
+            statusMessage.style.color = 'rgba(255, 255, 255, 0.9)';
+          }
+        });
+
+        statusMessage.appendChild(startServerButton);
+
+        // Add a link to the documentation
+        const docLink = window.top.document.createElement('a');
+        docLink.href = 'https://github.com/yourusername/clicy#troubleshooting';
+        docLink.target = '_blank';
+        docLink.textContent = 'View troubleshooting guide';
+        docLink.style.cssText = `
+          margin-left: 10px;
+          color: #4a88ff;
+          text-decoration: underline;
+          cursor: pointer;
+          font-size: 12px;
+        `;
+
+        statusMessage.appendChild(docLink);
+
         statusMessage.style.borderLeftColor = '#f44336';
         statusMessage.style.backgroundColor = 'rgba(244, 67, 54, 0.1)';
         statusMessage.style.color = 'rgba(255, 255, 255, 0.9)';
-        console.error('Export error:', error);
       });
   });
 
@@ -695,23 +1323,239 @@ Cypress.on('test:before:run', () => {
         .then(response => response.json())
         .then(data => {
           if (data.success) {
-            statusMessage.textContent = 'Commands reset successfully';
+            // Create success message with icon
+            statusMessage.innerHTML = '';
+
+            const iconSpan = window.top.document.createElement('span');
+            iconSpan.innerHTML = ICONS.success;
+            iconSpan.style.cssText = `
+              margin-right: 8px;
+              vertical-align: middle;
+            `;
+
+            const textSpan = window.top.document.createElement('span');
+            textSpan.textContent = 'Commands reset successfully';
+            textSpan.style.cssText = `
+              vertical-align: middle;
+            `;
+
+            statusMessage.appendChild(iconSpan);
+            statusMessage.appendChild(textSpan);
+
             statusMessage.style.borderLeftColor = '#4CAF50';
             statusMessage.style.backgroundColor = 'rgba(76, 175, 80, 0.1)';
             statusMessage.style.color = 'rgba(255, 255, 255, 0.9)';
           } else {
-            statusMessage.textContent = `Error: ${data.error}`;
+            // Create error message with icon
+            statusMessage.innerHTML = '';
+
+            const iconSpan = window.top.document.createElement('span');
+            iconSpan.innerHTML = ICONS.error;
+            iconSpan.style.cssText = `
+              margin-right: 8px;
+              vertical-align: middle;
+            `;
+
+            const textSpan = window.top.document.createElement('span');
+            textSpan.textContent = `Error: ${data.error}`;
+            textSpan.style.cssText = `
+              vertical-align: middle;
+            `;
+
+            statusMessage.appendChild(iconSpan);
+            statusMessage.appendChild(textSpan);
+
             statusMessage.style.borderLeftColor = '#f44336';
             statusMessage.style.backgroundColor = 'rgba(244, 67, 54, 0.1)';
             statusMessage.style.color = 'rgba(255, 255, 255, 0.9)';
           }
         })
         .catch(error => {
-          statusMessage.textContent = `Error: ${error.message}. Make sure the server is running (npm run clicy:server)`;
+          console.error('Reset error:', error);
+
+          // Clear the status message
+          statusMessage.innerHTML = '';
+
+          // Create error message with icon
+          const iconSpan = window.top.document.createElement('span');
+          iconSpan.innerHTML = ICONS.error;
+          iconSpan.style.cssText = `
+            margin-right: 8px;
+            vertical-align: middle;
+          `;
+
+          const textSpan = window.top.document.createElement('span');
+          textSpan.textContent = `Error: ${error.message}. Waiting for server to respond...`;
+          textSpan.style.cssText = `
+            vertical-align: middle;
+          `;
+
+          statusMessage.appendChild(iconSpan);
+          statusMessage.appendChild(textSpan);
+
+          // Add a button to retry the connection
+          const startServerButton = window.top.document.createElement('button');
+          startServerButton.textContent = 'Retry Connection';
+          startServerButton.style.cssText = `
+            margin-left: 10px;
+            padding: 4px 8px;
+            background: #4a88ff;
+            color: white;
+            border: none;
+            border-radius: 4px;
+            cursor: pointer;
+            font-size: 12px;
+          `;
+
+          startServerButton.addEventListener('click', () => {
+            // Update status message
+            statusMessage.innerHTML = '';
+            const loadingSpan = window.top.document.createElement('span');
+            loadingSpan.textContent = 'Starting server...';
+            statusMessage.appendChild(loadingSpan);
+            statusMessage.style.borderLeftColor = '#2196F3';
+            statusMessage.style.backgroundColor = 'rgba(33, 150, 243, 0.1)';
+            statusMessage.style.color = 'rgba(255, 255, 255, 0.9)';
+
+            // Start the server using the start.ts script
+            try {
+              // Use fetch to call a local endpoint that will trigger the server start
+              // This is just a ping to see if we can reach the server after a delay
+              setTimeout(() => {
+                // Open a new window to run the npm command
+                const serverWindow = window.top.open('', '_blank');
+                if (serverWindow) {
+                  serverWindow.document.write(`
+                    <html>
+                      <head>
+                        <title>Starting Clicy Server</title>
+                        <style>
+                          body { 
+                            font-family: Arial, sans-serif; 
+                            background: #1a2530;
+                            color: white;
+                            padding: 20px;
+                          }
+                          pre {
+                            background: rgba(0,0,0,0.2);
+                            padding: 10px;
+                            border-radius: 4px;
+                            overflow: auto;
+                          }
+                        </style>
+                      </head>
+                      <body>
+                        <h2>Starting Clicy Server</h2>
+                        <p>Please keep this window open while using Clicy.</p>
+                        <p>You can close this window when you're done using Clicy.</p>
+                        <p>Running: <code>npm run clicy:server</code></p>
+                        <pre id="output">Starting server...\n</pre>
+                        <script>
+                          // This script would ideally start the server, but browser security prevents it
+                          // Instead, we'll show instructions
+                          document.getElementById('output').textContent += 'For security reasons, the browser cannot start the server automatically.\\n\\n';
+                          document.getElementById('output').textContent += 'Please open a terminal and run:\\n';
+                          document.getElementById('output').textContent += 'npm run clicy:server\\n\\n';
+                          document.getElementById('output').textContent += 'Or use the combined command that starts both server and Cypress:\\n';
+                          document.getElementById('output').textContent += 'npm run clicy:start\\n';
+                        </script>
+                      </body>
+                    </html>
+                  `);
+                  serverWindow.document.close();
+                }
+
+                // Check if the server is now running
+                fetch('http://localhost:4000/commands', { method: 'GET' })
+                  .then(() => {
+                    // Server is running now
+                    statusMessage.innerHTML = '';
+                    const successSpan = window.top.document.createElement('span');
+                    successSpan.innerHTML = ICONS.success;
+                    successSpan.style.cssText = `
+                      margin-right: 8px;
+                      vertical-align: middle;
+                    `;
+
+                    const successTextSpan = window.top.document.createElement('span');
+                    successTextSpan.textContent = 'Server started successfully! Try your command again.';
+                    successTextSpan.style.cssText = `
+                      vertical-align: middle;
+                    `;
+
+                    statusMessage.appendChild(successSpan);
+                    statusMessage.appendChild(successTextSpan);
+                    statusMessage.style.borderLeftColor = '#4CAF50';
+                    statusMessage.style.backgroundColor = 'rgba(76, 175, 80, 0.1)';
+                    statusMessage.style.color = 'rgba(255, 255, 255, 0.9)';
+                  })
+                  .catch(() => {
+                    // Server still not running
+                    statusMessage.innerHTML = '';
+                    const errorSpan = window.top.document.createElement('span');
+                    errorSpan.innerHTML = ICONS.error;
+                    errorSpan.style.cssText = `
+                      margin-right: 8px;
+                      vertical-align: middle;
+                    `;
+
+                    const errorTextSpan = window.top.document.createElement('span');
+                    errorTextSpan.textContent = 'Could not start server automatically. Please run "npm run clicy:server" in a terminal, or use "npm run clicy:start" to start both server and Cypress.';
+                    errorTextSpan.style.cssText = `
+                      vertical-align: middle;
+                    `;
+
+                    statusMessage.appendChild(errorSpan);
+                    statusMessage.appendChild(errorTextSpan);
+                    statusMessage.style.borderLeftColor = '#f44336';
+                    statusMessage.style.backgroundColor = 'rgba(244, 67, 54, 0.1)';
+                    statusMessage.style.color = 'rgba(255, 255, 255, 0.9)';
+                  });
+              }, 2000);
+            } catch (err) {
+              console.error('[CLICY DEBUG] Error starting server:', err);
+              statusMessage.innerHTML = '';
+              const errorSpan = window.top.document.createElement('span');
+              errorSpan.innerHTML = ICONS.error;
+              errorSpan.style.cssText = `
+                margin-right: 8px;
+                vertical-align: middle;
+              `;
+
+              const errorTextSpan = window.top.document.createElement('span');
+              errorTextSpan.textContent = `Error starting server: ${err.message}. Please run "npm run clicy:server" in a terminal, or use "npm run clicy:start" to start both server and Cypress.`;
+              errorTextSpan.style.cssText = `
+                vertical-align: middle;
+              `;
+
+              statusMessage.appendChild(errorSpan);
+              statusMessage.appendChild(errorTextSpan);
+              statusMessage.style.borderLeftColor = '#f44336';
+              statusMessage.style.backgroundColor = 'rgba(244, 67, 54, 0.1)';
+              statusMessage.style.color = 'rgba(255, 255, 255, 0.9)';
+            }
+          });
+
+          statusMessage.appendChild(startServerButton);
+
+          // Add a link to the documentation
+          const docLink = window.top.document.createElement('a');
+          docLink.href = 'https://github.com/yourusername/clicy#troubleshooting';
+          docLink.target = '_blank';
+          docLink.textContent = 'View troubleshooting guide';
+          docLink.style.cssText = `
+            margin-left: 10px;
+            color: #4a88ff;
+            text-decoration: underline;
+            cursor: pointer;
+            font-size: 12px;
+          `;
+
+          statusMessage.appendChild(docLink);
+
           statusMessage.style.borderLeftColor = '#f44336';
           statusMessage.style.backgroundColor = 'rgba(244, 67, 54, 0.1)';
           statusMessage.style.color = 'rgba(255, 255, 255, 0.9)';
-          console.error('Reset error:', error);
         });
     }
   });
@@ -756,10 +1600,113 @@ Cypress.on('test:before:run', () => {
     filterCommands(commandInput.value);
   });
 
-  // Add input event to filter commands as user types
+  // Add input event to filter commands as user types and update preview
   commandInput.addEventListener('input', () => {
     console.log('[CLICY DEBUG] Input changed, filtering autocomplete');
     filterCommands(commandInput.value);
+
+    // Update the command preview
+    const command = commandInput.value.trim();
+
+    // Process the command to show the preview
+    let processedCommand = command;
+
+    // Handle goto command with URL processing
+    if (processedCommand.startsWith('goto(')) {
+      // Extract the URL from goto('url')
+      const urlMatch = processedCommand.match(/goto\(['"]?(.*?)['"]?\)/);
+      if (urlMatch && urlMatch[1]) {
+        let url = urlMatch[1];
+
+        // Add https:// protocol if the URL doesn't have one
+        if (!url.startsWith('http://') && !url.startsWith('https://')) {
+          url = 'https://' + url;
+        }
+
+        processedCommand = `visit("${url}")`;
+      }
+    }
+    // Handle click command
+    else if (processedCommand.startsWith('click(')) {
+      // Check if the command includes a selector type
+      if (processedCommand.split(',').length > 1) {
+        // Extract selector and selector type from click('selector', 'selectorType')
+        const clickMatch = processedCommand.match(/click\(['"]?(.*?)['"]?,\s*['"]?(.*?)['"]?\)/);
+        if (clickMatch && clickMatch[1] && clickMatch[2]) {
+          const selector = clickMatch[1];
+          const selectorType = clickMatch[2];
+
+          if (selectorType === 'get') {
+            processedCommand = `get("${selector}").click()`;
+          } else {
+            // Default to contains
+            processedCommand = `contains("${selector}").click()`;
+          }
+        }
+      } else {
+        // Extract the label from click('label')
+        const labelMatch = processedCommand.match(/click\(['"]?(.*?)['"]?\)/);
+        if (labelMatch && labelMatch[1]) {
+          const label = labelMatch[1];
+          processedCommand = `contains("${label}").click()`;
+        }
+      }
+    }
+    // Handle write command
+    else if (processedCommand.startsWith('write(')) {
+      // Check if the command includes a selector type
+      if (processedCommand.split(',').length > 2) {
+        // Extract text, selector, and selector type from write('text', 'selector', 'selectorType')
+        const writeMatch = processedCommand.match(/write\(['"]?(.*?)['"]?,\s*['"]?(.*?)['"]?,\s*['"]?(.*?)['"]?\)/);
+        if (writeMatch && writeMatch[1] && writeMatch[2] && writeMatch[3]) {
+          const text = writeMatch[1];
+          const selector = writeMatch[2];
+          const selectorType = writeMatch[3];
+
+          if (selectorType === 'get') {
+            processedCommand = `get("${selector}").type("${text}")`;
+          } else {
+            // Default to contains
+            processedCommand = `contains("${selector}").parent().find('input').type("${text}")`;
+          }
+        }
+      } else {
+        // Extract text and field from write('text', 'field')
+        const writeMatch = processedCommand.match(/write\(['"]?(.*?)['"]?,\s*['"]?(.*?)['"]?\)/);
+        if (writeMatch && writeMatch[1] && writeMatch[2]) {
+          const text = writeMatch[1];
+          const field = writeMatch[2];
+          processedCommand = `contains("${field}").parent().find('input').type("${text}")`;
+        }
+      }
+    }
+    // Handle get command
+    else if (processedCommand.startsWith('get(')) {
+      // Extract the selector from get('selector')
+      const selectorMatch = processedCommand.match(/get\(['"]?(.*?)['"]?\)/);
+      if (selectorMatch && selectorMatch[1]) {
+        const selector = selectorMatch[1];
+        processedCommand = `get("${selector}")`;
+      }
+    }
+    // Handle contains command
+    else if (processedCommand.startsWith('contains(')) {
+      // Extract the text from contains('text')
+      const textMatch = processedCommand.match(/contains\(['"]?(.*?)['"]?\)/);
+      if (textMatch && textMatch[1]) {
+        const text = textMatch[1];
+        processedCommand = `contains("${text}")`;
+      }
+    }
+
+    // Update the preview content
+    if (command) {
+      previewContent.textContent = `cy.${processedCommand}`;
+      commandPreview.style.opacity = '1';
+    } else {
+      previewContent.textContent = 'cy.';
+      commandPreview.style.opacity = '0.5';
+    }
   });
 
   // Hide dropdown when clicking outside
@@ -787,6 +1734,7 @@ Cypress.on('test:before:run', () => {
 
   // Assemble the UI
   inputContainer.appendChild(commandInput);
+  inputContainer.appendChild(commandPreview);
   buttonsContainer.appendChild(runButton);
   buttonsContainer.appendChild(exportButton);
   buttonsContainer.appendChild(resetButton);

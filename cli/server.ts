@@ -1,6 +1,12 @@
 import express from 'express';
 import bodyParser from 'body-parser';
-import { writeCommandToFile, exportAllToCodeFile, readCommandsFromFile } from '../utils/fileWriter';
+import { 
+  writeCommandToFile, 
+  exportAllToCodeFile, 
+  readCommandsFromFile,
+  readCommandsFromHistoryFile,
+  writeCommandToHistoryFile
+} from '../utils/fileWriter';
 
 const app = express();
 const PORT = 4000;
@@ -31,20 +37,31 @@ app.get('/commands', (req, res) => {
   }
 });
 
+// Get command history
+app.get('/history', (req, res) => {
+  try {
+    const commands = readCommandsFromHistoryFile();
+    res.json({ success: true, commands });
+  } catch (error) {
+    console.error('Error reading command history:', error);
+    res.status(500).json({ success: false, error: 'Failed to read command history' });
+  }
+});
+
 // Add a new command
 app.post('/command', (req, res) => {
   try {
     const { command } = req.body;
-    
+
     if (!command) {
       return res.status(400).json({ success: false, error: 'Command is required' });
     }
 
     const commands = readCommandsFromFile();
     commands.push(command);
-    
+
     writeCommandToFile(command, commands);
-    
+
     res.json({ success: true, message: 'Command added successfully' });
   } catch (error) {
     console.error('Error adding command:', error);
@@ -67,7 +84,12 @@ app.post('/export', (req, res) => {
 // Reset all commands
 app.post('/reset', (req, res) => {
   try {
+    // Reset the Cypress test file
     writeCommandToFile('', []);
+
+    // Reset the history file
+    writeCommandToHistoryFile([]);
+
     res.json({ success: true, message: 'Commands reset successfully' });
   } catch (error) {
     console.error('Error resetting commands:', error);
