@@ -6,8 +6,9 @@ export default defineConfig({
     setupNodeEvents(on, config) {
       // implement node event listeners here
     },
-    specPattern: 'cypress/e2e/**/*.cy.{js,jsx,ts,tsx}',
-    supportFile: false,
+    specPattern: 'cypress/e2e/**/*.cy.{js,ts}',
+    supportFile: 'support/e2e.ts',
+    baseUrl: 'https://www.trackman.com',
   },
   video: false,
   screenshotOnRunFailure: false,

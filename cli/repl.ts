@@ -2,7 +2,7 @@ import repl from 'repl';
 import fs from 'fs';
 import path from 'path';
 import { writeCommandToFile, exportAllToCodeFile, readCommandsFromFile } from '../utils/fileWriter';
-import { click, write, goto, closeBrowser } from '../commands/dsl';
+import { click, write, goto, closeBrowser, get, contains } from '../commands/dsl';
 
 // Color constants for console output
 const colors = {
@@ -165,11 +165,25 @@ function mapCommand(input: string): string {
       }
       return goto(args.replace(/['"]/g, '')) || '';
     }
-    case 'click': return click(args.replace(/['"]/g, ''));
-    case 'write': {
-      const [text, label] = args.split(',').map(x => x.trim().replace(/['"]/g, ''));
-      return write(text, label);
+    case 'click': {
+      // Check if the argument includes a selector type
+      if (args.includes(',')) {
+        const [selector, selectorType] = args.split(',').map(x => x.trim().replace(/['"]/g, ''));
+        return click(selector, selectorType as 'contains' | 'get');
+      }
+      return click(args.replace(/['"]/g, ''));
     }
+    case 'write': {
+      // Check if the argument includes a selector type
+      if (args.split(',').length > 2) {
+        const [text, selector, selectorType] = args.split(',').map(x => x.trim().replace(/['"]/g, ''));
+        return write(text, selector, selectorType as 'contains' | 'get');
+      }
+      const [text, selector] = args.split(',').map(x => x.trim().replace(/['"]/g, ''));
+      return write(text, selector);
+    }
+    case 'get': return get(args.replace(/['"]/g, ''));
+    case 'contains': return contains(args.replace(/['"]/g, ''));
     default: return '';
   }
 }
