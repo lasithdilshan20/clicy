@@ -1,4 +1,5 @@
 // This file injects a REPL UI into the Cypress Test Runner
+import { queries } from '@testing-library/dom';
 
 // SVG Icons for a more futuristic UI
 const ICONS = {
@@ -458,6 +459,9 @@ Cypress.on('test:before:run', () => {
 
     // Add click event to insert the command into the input
     item.addEventListener('click', () => {
+      // Reset active command mode
+      activeCommandMode = null;
+
       // If it's just the command with empty parentheses, position cursor inside
       if (cmd.command === 'goto()' || cmd.command === 'click()' || cmd.command === 'closeBrowser()' || 
           cmd.command === 'get()' || cmd.command === 'contains()') {
@@ -479,6 +483,30 @@ Cypress.on('test:before:run', () => {
         // Position cursor after first quote
         const cursorPos = 7;
         commandInput.setSelectionRange(cursorPos, cursorPos);
+      }
+      // Special handling for click with get
+      else if (cmd.command === 'click() with get') {
+        commandInput.value = cmd.example;
+        autocompleteDropdown.style.display = 'none';
+        commandInput.focus();
+
+        // Set active command mode for element inspection
+        activeCommandMode = 'click-get';
+
+        // Automatically activate inspection mode
+        inspectButton.click();
+      }
+      // Special handling for write with get
+      else if (cmd.command === 'write() with get') {
+        commandInput.value = cmd.example;
+        autocompleteDropdown.style.display = 'none';
+        commandInput.focus();
+
+        // Set active command mode for element inspection
+        activeCommandMode = 'write-get';
+
+        // Automatically activate inspection mode
+        inspectButton.click();
       }
       // Fallback to just inserting the example
       else {
@@ -594,6 +622,115 @@ Cypress.on('test:before:run', () => {
     resetButton.style.boxShadow = '0 4px 6px rgba(0, 0, 0, 0.1), 0 1px 3px rgba(0, 0, 0, 0.1)';
   });
 
+  // Create the Inspect Element button
+  const inspectButton = window.top.document.createElement('button');
+  inspectButton.innerHTML = '<svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="11" cy="11" r="8"></circle><line x1="21" y1="21" x2="16.65" y2="16.65"></line><line x1="11" y1="8" x2="11" y2="14"></line><line x1="8" y1="11" x2="14" y2="11"></line></svg>';
+  inspectButton.title = "Inspect Element";
+  inspectButton.style.cssText = `
+    width: 48px;
+    height: 48px;
+    background: linear-gradient(135deg, #9c27b0, #673ab7);
+    color: white;
+    border: none;
+    border-radius: 50%;
+    cursor: pointer;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-weight: bold;
+    transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+    box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1), 0 1px 3px rgba(0, 0, 0, 0.1);
+  `;
+
+  // Add hover effect
+  inspectButton.addEventListener('mouseover', () => {
+    inspectButton.style.transform = 'translateY(-2px)';
+    inspectButton.style.boxShadow = '0 6px 10px rgba(0, 0, 0, 0.2), 0 1px 3px rgba(0, 0, 0, 0.1), 0 0 10px rgba(156, 39, 176, 0.5)';
+  });
+
+  inspectButton.addEventListener('mouseout', () => {
+    inspectButton.style.transform = 'translateY(0)';
+    inspectButton.style.boxShadow = '0 4px 6px rgba(0, 0, 0, 0.1), 0 1px 3px rgba(0, 0, 0, 0.1)';
+  });
+
+  // Create the Smart Selector Toggle button
+  const smartSelectorButton = window.top.document.createElement('button');
+  smartSelectorButton.innerHTML = '<svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M22 12h-4l-3 9L9 3l-3 9H2"></path></svg>';
+  smartSelectorButton.title = "Toggle Smart Selectors";
+  smartSelectorButton.style.cssText = `
+    width: 48px;
+    height: 48px;
+    background: linear-gradient(135deg, #ff9800, #ff5722);
+    color: white;
+    border: none;
+    border-radius: 50%;
+    cursor: pointer;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-weight: bold;
+    transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+    box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1), 0 1px 3px rgba(0, 0, 0, 0.1);
+  `;
+
+  // Add hover effect
+  smartSelectorButton.addEventListener('mouseover', () => {
+    smartSelectorButton.style.transform = 'translateY(-2px)';
+    smartSelectorButton.style.boxShadow = '0 6px 10px rgba(0, 0, 0, 0.2), 0 1px 3px rgba(0, 0, 0, 0.1), 0 0 10px rgba(255, 152, 0, 0.5)';
+  });
+
+  smartSelectorButton.addEventListener('mouseout', () => {
+    smartSelectorButton.style.transform = 'translateY(0)';
+    smartSelectorButton.style.boxShadow = '0 4px 6px rgba(0, 0, 0, 0.1), 0 1px 3px rgba(0, 0, 0, 0.1)';
+  });
+
+  // Default to using smart selectors
+  let useSmartSelectors = true;
+
+  // Update button appearance based on current state
+  const updateSmartSelectorButtonState = () => {
+    if (useSmartSelectors) {
+      smartSelectorButton.style.background = 'linear-gradient(135deg, #ff9800, #ff5722)';
+      smartSelectorButton.title = "Smart Selectors: ON (click to toggle)";
+    } else {
+      smartSelectorButton.style.background = 'linear-gradient(135deg, #9e9e9e, #616161)';
+      smartSelectorButton.title = "Smart Selectors: OFF (click to toggle)";
+    }
+  };
+
+  // Initialize button state
+  updateSmartSelectorButtonState();
+
+  // Add click event to toggle smart selectors
+  smartSelectorButton.addEventListener('click', () => {
+    useSmartSelectors = !useSmartSelectors;
+    updateSmartSelectorButtonState();
+
+    // Update status message
+    statusMessage.innerHTML = '';
+    const iconSpan = window.top.document.createElement('span');
+    iconSpan.innerHTML = useSmartSelectors 
+      ? '<svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="#4CAF50" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M22 11.08V12a10 10 0 1 1-5.93-9.14"></path><polyline points="22 4 12 14.01 9 11.01"></polyline></svg>'
+      : '<svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="#ff9800" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"></circle><line x1="12" y1="8" x2="12" y2="12"></line><line x1="12" y1="16" x2="12.01" y2="16"></line></svg>';
+    iconSpan.style.cssText = `
+      margin-right: 8px;
+      vertical-align: middle;
+    `;
+
+    const textSpan = window.top.document.createElement('span');
+    textSpan.textContent = useSmartSelectors 
+      ? 'Smart Selectors enabled. Using @testing-library/dom for better selector suggestions.'
+      : 'Smart Selectors disabled. Using basic CSS selectors.';
+    textSpan.style.cssText = `
+      vertical-align: middle;
+    `;
+
+    statusMessage.appendChild(iconSpan);
+    statusMessage.appendChild(textSpan);
+    statusMessage.style.borderLeftColor = useSmartSelectors ? '#4CAF50' : '#ff9800';
+    statusMessage.style.backgroundColor = useSmartSelectors ? 'rgba(76, 175, 80, 0.1)' : 'rgba(255, 152, 0, 0.1)';
+  });
+
   // Create the status message
   const statusMessage = window.top.document.createElement('div');
   statusMessage.id = 'clicy-status';
@@ -643,6 +780,725 @@ Cypress.on('test:before:run', () => {
   statusMessage.textContent = 'Ready to execute commands';
   statusMessage.style.borderLeftColor = '#4a88ff';
   statusMessage.style.backgroundColor = 'rgba(74, 136, 255, 0.1)';
+
+  // Inspection mode variables
+  let isInspectionMode = false;
+  let highlightOverlay: HTMLElement | null = null;
+  let tooltipElement: HTMLElement | null = null;
+  let autIframe: HTMLIFrameElement | null = null;
+  let iframeDocument: Document | null = null;
+  let focusableElements: HTMLElement[] = []; // Array to store focusable elements
+  let currentFocusIndex = -1; // Index of currently focused element
+  let activeCommandMode: 'click-get' | 'write-get' | null = null; // Track the active command mode
+
+  // Function to get the AUT iframe
+  const getAutIframe = (): HTMLIFrameElement | null => {
+    return window.top.document.querySelector('iframe.aut-iframe');
+  };
+
+  // Function to get the best selector for an element
+  const getBestSelector = (element: HTMLElement): string => {
+    // Try to get the id
+    if (element.id) {
+      return `#${element.id}`;
+    }
+
+    // Try to get a data-testid attribute
+    if (element.getAttribute('data-testid')) {
+      return `[data-testid="${element.getAttribute('data-testid')}"]`;
+    }
+
+    // Try to get a data-cy attribute
+    if (element.getAttribute('data-cy')) {
+      return `[data-cy="${element.getAttribute('data-cy')}"]`;
+    }
+
+    // Try to get a class
+    if (element.className && typeof element.className === 'string' && element.className.trim()) {
+      // Get the first class
+      const className = element.className.trim().split(/\\s+/)[0];
+      return `.${className}`;
+    }
+
+    // Try to get a name attribute
+    if (element.getAttribute('name')) {
+      return `[name="${element.getAttribute('name')}"]`;
+    }
+
+    // Try to get a type and value for inputs
+    if (element.tagName.toLowerCase() === 'input' && element.getAttribute('type') && element.getAttribute('value')) {
+      return `input[type="${element.getAttribute('type')}"][value="${element.getAttribute('value')}"]`;
+    }
+
+    // Fallback to tag name with any available attribute
+    const tagName = element.tagName.toLowerCase();
+    if (element.attributes.length > 0) {
+      for (let i = 0; i < element.attributes.length; i++) {
+        const attr = element.attributes[i];
+        if (attr.name !== 'style' && attr.name !== 'class' && attr.value) {
+          return `${tagName}[${attr.name}="${attr.value}"]`;
+        }
+      }
+    }
+
+    // Last resort: tag name with text content if it's short enough
+    const textContent = element.textContent?.trim();
+    if (textContent && textContent.length < 30) {
+      return `${tagName}:contains("${textContent}")`;
+    }
+
+    // Absolute fallback
+    return tagName;
+  };
+
+  // Function to get a smart selector using @testing-library/dom
+  const getSmartSelector = (element: HTMLElement): string => {
+    try {
+      // Try to get a suggested query from @testing-library/dom
+      const suggestions = queries.getSuggestedQuery(element, 'get');
+
+      if (suggestions) {
+        // Convert the suggestion to a Cypress-friendly selector
+        if (suggestions.queryName === 'getByRole') {
+          return `[role="${suggestions.queryValue}"]`;
+        } else if (suggestions.queryName === 'getByLabelText') {
+          return `label:contains("${suggestions.queryValue}")`;
+        } else if (suggestions.queryName === 'getByText') {
+          return `:contains("${suggestions.queryValue}")`;
+        } else if (suggestions.queryName === 'getByTestId') {
+          return `[data-testid="${suggestions.queryValue}"]`;
+        } else if (suggestions.queryName === 'getByAltText') {
+          return `[alt="${suggestions.queryValue}"]`;
+        } else if (suggestions.queryName === 'getByTitle') {
+          return `[title="${suggestions.queryValue}"]`;
+        } else if (suggestions.queryName === 'getByDisplayValue') {
+          return `[value="${suggestions.queryValue}"]`;
+        } else if (suggestions.queryName === 'getByPlaceholderText') {
+          return `[placeholder="${suggestions.queryValue}"]`;
+        }
+      }
+
+      // If no suggestion found or not convertible to Cypress selector, fall back to getBestSelector
+      return getBestSelector(element);
+    } catch (error) {
+      console.error('[CLICY DEBUG] Error getting smart selector:', error);
+      // Fall back to getBestSelector in case of error
+      return getBestSelector(element);
+    }
+  };
+
+  // Function to get the appropriate selector based on user preference
+  const getSelector = (element: HTMLElement): string => {
+    return useSmartSelectors ? getSmartSelector(element) : getBestSelector(element);
+  };
+
+  // Create highlight overlay (will be added to DOM when needed)
+  const createHighlightOverlay = (doc: Document) => {
+    const overlay = doc.createElement('div');
+    overlay.style.cssText = `
+      position: absolute;
+      pointer-events: none;
+      border: 2px dashed rgba(156, 39, 176, 0.8);
+      background-color: rgba(156, 39, 176, 0.1);
+      border-radius: 2px;
+      z-index: 99999;
+      box-shadow: 0 0 10px rgba(156, 39, 176, 0.3);
+      transition: all 0.15s ease-in-out;
+    `;
+    return overlay;
+  };
+
+  // Create tooltip element (will be added to DOM when needed)
+  const createTooltip = (doc: Document) => {
+    const tooltip = doc.createElement('div');
+    tooltip.style.cssText = `
+      position: absolute;
+      background-color: #2c3e50;
+      color: white;
+      padding: 6px 10px;
+      border-radius: 4px;
+      font-family: 'Consolas', monospace;
+      font-size: 12px;
+      pointer-events: none;
+      z-index: 100000;
+      box-shadow: 0 2px 10px rgba(0, 0, 0, 0.2);
+      max-width: 300px;
+      word-break: break-all;
+      border-left: 3px solid #9c27b0;
+    `;
+    return tooltip;
+  };
+
+  // Handle inspection mode
+  inspectButton.addEventListener('click', () => {
+    // Toggle inspection mode
+    isInspectionMode = !isInspectionMode;
+
+    if (isInspectionMode) {
+      // Reset keyboard navigation state
+      focusableElements = [];
+      currentFocusIndex = -1;
+
+      // Find the AUT iframe
+      autIframe = getAutIframe();
+
+      if (!autIframe) {
+        // Show error message if iframe not found
+        statusMessage.innerHTML = '';
+        const iconSpan = window.top.document.createElement('span');
+        iconSpan.innerHTML = ICONS.error;
+        iconSpan.style.cssText = `
+          margin-right: 8px;
+          vertical-align: middle;
+        `;
+
+        const textSpan = window.top.document.createElement('span');
+        textSpan.textContent = 'Error: Application iframe not found. Please make sure the application is loaded.';
+        textSpan.style.cssText = `
+          vertical-align: middle;
+        `;
+
+        statusMessage.appendChild(iconSpan);
+        statusMessage.appendChild(textSpan);
+        statusMessage.style.borderLeftColor = '#f44336';
+        statusMessage.style.backgroundColor = 'rgba(244, 67, 54, 0.1)';
+
+        isInspectionMode = false;
+        return;
+      }
+
+      // Get the iframe's document
+      try {
+        iframeDocument = autIframe.contentDocument || (autIframe.contentWindow && autIframe.contentWindow.document);
+
+        if (!iframeDocument) {
+          throw new Error('Could not access iframe document');
+        }
+      } catch (error) {
+        // Show error message if iframe document not accessible
+        statusMessage.innerHTML = '';
+        const iconSpan = window.top.document.createElement('span');
+        iconSpan.innerHTML = ICONS.error;
+        iconSpan.style.cssText = `
+          margin-right: 8px;
+          vertical-align: middle;
+        `;
+
+        const textSpan = window.top.document.createElement('span');
+        textSpan.textContent = `Error: Could not access application iframe content. ${error.message}`;
+        textSpan.style.cssText = `
+          vertical-align: middle;
+        `;
+
+        statusMessage.appendChild(iconSpan);
+        statusMessage.appendChild(textSpan);
+        statusMessage.style.borderLeftColor = '#f44336';
+        statusMessage.style.backgroundColor = 'rgba(244, 67, 54, 0.1)';
+
+        isInspectionMode = false;
+        return;
+      }
+
+      // Update button to show active state
+      inspectButton.style.backgroundColor = '#673ab7';
+      inspectButton.style.boxShadow = '0 0 0 3px rgba(156, 39, 176, 0.3), 0 0 10px rgba(156, 39, 176, 0.2)';
+
+      // Update status message
+      statusMessage.innerHTML = '';
+      const iconSpan = window.top.document.createElement('span');
+      iconSpan.innerHTML = '<svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="11" cy="11" r="8"></circle><line x1="21" y1="21" x2="16.65" y2="16.65"></line></svg>';
+      iconSpan.style.cssText = `
+        margin-right: 8px;
+        vertical-align: middle;
+      `;
+
+      const textSpan = window.top.document.createElement('span');
+      textSpan.innerHTML = 'Inspection mode active. Hover over elements in the application and click to select.<br>' +
+                          '<strong>Keyboard Navigation:</strong> Press <kbd>Tab</kbd> to cycle through elements, <kbd>Enter</kbd> to select, <kbd>ESC</kbd> to cancel.';
+      textSpan.style.cssText = `
+        vertical-align: middle;
+        line-height: 1.5;
+      `;
+
+      // Style for keyboard shortcuts
+      const style = window.top.document.createElement('style');
+      style.textContent = `
+        #clicy-status kbd {
+          background-color: #f7f7f7;
+          border: 1px solid #ccc;
+          border-radius: 3px;
+          box-shadow: 0 1px 0 rgba(0,0,0,0.2);
+          color: #333;
+          display: inline-block;
+          font-family: monospace;
+          font-size: 11px;
+          line-height: 1;
+          padding: 2px 4px;
+          margin: 0 2px;
+          vertical-align: middle;
+        }
+      `;
+      window.top.document.head.appendChild(style);
+
+      statusMessage.appendChild(iconSpan);
+      statusMessage.appendChild(textSpan);
+      statusMessage.style.borderLeftColor = '#9c27b0';
+      statusMessage.style.backgroundColor = 'rgba(156, 39, 176, 0.1)';
+
+      // Create highlight overlay and tooltip if they don't exist
+      if (!highlightOverlay && iframeDocument) {
+        highlightOverlay = createHighlightOverlay(iframeDocument);
+        iframeDocument.body.appendChild(highlightOverlay);
+      }
+
+      if (!tooltipElement && iframeDocument) {
+        tooltipElement = createTooltip(iframeDocument);
+        iframeDocument.body.appendChild(tooltipElement);
+      }
+
+      // Change cursor style for the iframe document
+      if (iframeDocument) {
+        iframeDocument.body.style.cursor = 'crosshair';
+      }
+
+      // Add mouseover event listener to highlight elements in the iframe
+      if (iframeDocument) {
+        iframeDocument.addEventListener('mouseover', handleMouseOver);
+      }
+
+      // Add click event listener to select elements in the iframe
+      if (iframeDocument) {
+        iframeDocument.addEventListener('click', handleElementClick);
+      }
+
+      // Add ESC key listener to cancel inspection mode
+      // We add this to both the iframe and the top document to ensure it works regardless of focus
+      if (iframeDocument) {
+        iframeDocument.addEventListener('keydown', handleKeyDown);
+      }
+      window.top.document.addEventListener('keydown', handleKeyDown);
+    } else {
+      // Exit inspection mode
+      exitInspectionMode();
+    }
+  });
+
+  // Handle mouse over elements during inspection
+  const handleMouseOver = (event: MouseEvent) => {
+    if (!isInspectionMode || !highlightOverlay || !tooltipElement || !iframeDocument) return;
+
+    // Get the target element
+    const targetElement = event.target as HTMLElement;
+
+    // Get element position and dimensions
+    const rect = targetElement.getBoundingClientRect();
+
+    // Get the iframe's position
+    const iframeRect = autIframe?.getBoundingClientRect() || { top: 0, left: 0 };
+
+    // Position the highlight overlay relative to the iframe
+    highlightOverlay.style.top = `${rect.top}px`;
+    highlightOverlay.style.left = `${rect.left}px`;
+    highlightOverlay.style.width = `${rect.width}px`;
+    highlightOverlay.style.height = `${rect.height}px`;
+    highlightOverlay.style.display = 'block';
+
+    // Get the selector for this element
+    const selector = getSelector(targetElement);
+
+    // Position the tooltip
+    tooltipElement.textContent = selector;
+    tooltipElement.style.top = `${rect.top - tooltipElement.offsetHeight - 5}px`;
+    tooltipElement.style.left = `${rect.left}px`;
+    tooltipElement.style.display = 'block';
+
+    // Adjust tooltip position if it goes off-screen
+    const tooltipRect = tooltipElement.getBoundingClientRect();
+
+    // Adjust left position if needed
+    if (rect.left < 0) {
+      tooltipElement.style.left = '0px';
+    } else if (rect.left + tooltipRect.width > iframeDocument.documentElement.clientWidth) {
+      tooltipElement.style.left = `${iframeDocument.documentElement.clientWidth - tooltipRect.width}px`;
+    }
+
+    // Adjust top position if needed
+    if (rect.top - tooltipElement.offsetHeight - 5 < 0) {
+      tooltipElement.style.top = `${rect.bottom + 5}px`;
+    }
+
+    // Prevent event propagation
+    event.stopPropagation();
+  };
+
+  // Handle element click during inspection
+  const handleElementClick = (event: MouseEvent) => {
+    if (!isInspectionMode) return;
+
+    // Get the target element
+    const targetElement = event.target as HTMLElement;
+
+    // Get the selector for this element
+    const selector = getSelector(targetElement);
+
+    // Check if we have an active command mode
+    if (activeCommandMode === 'click-get') {
+      // Insert the selector for click with get
+      commandInput.value = `click("${selector}", "get")`;
+    } else if (activeCommandMode === 'write-get') {
+      // For write command, we need to check if there's already text in the input
+      const writeMatch = commandInput.value.match(/write\(['"]?(.*?)['"]?,/);
+      if (writeMatch && writeMatch[1]) {
+        // Preserve the existing text
+        const text = writeMatch[1];
+        commandInput.value = `write("${text}", "${selector}", "get")`;
+      } else {
+        // If no text found, just add the selector with empty text
+        commandInput.value = `write("", "${selector}", "get")`;
+
+        // Position cursor inside the first quotes for the user to enter text
+        setTimeout(() => {
+          commandInput.setSelectionRange(7, 7);
+          commandInput.focus();
+        }, 0);
+      }
+    } else {
+      // If no active command mode, check the current input value
+      const command = commandInput.value;
+
+      // Check if we're in a click or write command based on input value
+      if (command.startsWith('click(')) {
+        // Replace the selector in click('selector', 'get')
+        commandInput.value = `click("${selector}", "get")`;
+      } else if (command.startsWith('write(')) {
+        // For write command, we need to preserve the text
+        const writeMatch = command.match(/write\(['"]?(.*?)['"]?,/);
+        if (writeMatch && writeMatch[1]) {
+          const text = writeMatch[1];
+          commandInput.value = `write("${text}", "${selector}", "get")`;
+        } else {
+          // If no text found, just add the selector
+          commandInput.value = `write("", "${selector}", "get")`;
+
+          // Position cursor inside the first quotes
+          setTimeout(() => {
+            commandInput.setSelectionRange(7, 7);
+            commandInput.focus();
+          }, 0);
+        }
+      } else {
+        // Default to a get command
+        commandInput.value = `get("${selector}")`;
+      }
+    }
+
+    // Update status message
+    statusMessage.innerHTML = '';
+    const iconSpan = window.top.document.createElement('span');
+    iconSpan.innerHTML = '<svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"></polyline></svg>';
+    iconSpan.style.cssText = `
+      margin-right: 8px;
+      vertical-align: middle;
+      color: #4CAF50;
+    `;
+
+    const textSpan = window.top.document.createElement('span');
+
+    // Show different message based on active command mode
+    if (activeCommandMode === 'click-get') {
+      textSpan.textContent = `Selected element for click: ${selector}`;
+    } else if (activeCommandMode === 'write-get') {
+      textSpan.textContent = `Selected input element: ${selector}`;
+    } else {
+      textSpan.textContent = `Selected element: ${selector}`;
+    }
+
+    textSpan.style.cssText = `
+      vertical-align: middle;
+    `;
+
+    statusMessage.appendChild(iconSpan);
+    statusMessage.appendChild(textSpan);
+    statusMessage.style.borderLeftColor = '#4CAF50';
+    statusMessage.style.backgroundColor = 'rgba(76, 175, 80, 0.1)';
+
+    // Exit inspection mode
+    exitInspectionMode();
+
+    // Focus the command input
+    commandInput.focus();
+
+    // Prevent default behavior and event propagation
+    event.preventDefault();
+    event.stopPropagation();
+  };
+
+  // Function to find all focusable elements in the iframe
+  const findFocusableElements = (): HTMLElement[] => {
+    if (!iframeDocument) return [];
+
+    // Selector for potentially focusable elements
+    const selector = 'a, button, input, select, textarea, [tabindex]:not([tabindex="-1"]), [role="button"], [role="link"], [role="checkbox"], [role="radio"], [role="switch"], [role="tab"]';
+
+    // Get all elements matching the selector
+    const elements = Array.from(iframeDocument.querySelectorAll(selector)) as HTMLElement[];
+
+    // Filter out hidden elements and those with display:none or visibility:hidden
+    return elements.filter(el => {
+      const style = window.getComputedStyle(el);
+      return style.display !== 'none' && 
+             style.visibility !== 'hidden' && 
+             el.offsetWidth > 0 && 
+             el.offsetHeight > 0;
+    });
+  };
+
+  // Function to focus an element by index
+  const focusElementByIndex = (index: number) => {
+    if (index >= 0 && index < focusableElements.length && highlightOverlay && tooltipElement) {
+      const element = focusableElements[index];
+      currentFocusIndex = index;
+
+      // Get element position and dimensions
+      const rect = element.getBoundingClientRect();
+
+      // Position the highlight overlay
+      highlightOverlay.style.top = `${rect.top}px`;
+      highlightOverlay.style.left = `${rect.left}px`;
+      highlightOverlay.style.width = `${rect.width}px`;
+      highlightOverlay.style.height = `${rect.height}px`;
+      highlightOverlay.style.display = 'block';
+
+      // Get the selector for this element
+      const selector = getSelector(element);
+
+      // Position the tooltip
+      tooltipElement.textContent = selector;
+      tooltipElement.style.top = `${rect.top - tooltipElement.offsetHeight - 5}px`;
+      tooltipElement.style.left = `${rect.left}px`;
+      tooltipElement.style.display = 'block';
+
+      // Adjust tooltip position if it goes off-screen
+      const tooltipRect = tooltipElement.getBoundingClientRect();
+
+      // Adjust left position if needed
+      if (rect.left < 0) {
+        tooltipElement.style.left = '0px';
+      } else if (rect.left + tooltipRect.width > (iframeDocument?.documentElement.clientWidth || 0)) {
+        tooltipElement.style.left = `${(iframeDocument?.documentElement.clientWidth || 0) - tooltipRect.width}px`;
+      }
+
+      // Adjust top position if needed
+      if (rect.top - tooltipElement.offsetHeight - 5 < 0) {
+        tooltipElement.style.top = `${rect.bottom + 5}px`;
+      }
+    }
+  };
+
+  // Handle keydown events (for ESC, Tab, and Enter keys)
+  const handleKeyDown = (event: KeyboardEvent) => {
+    if (!isInspectionMode) return;
+
+    if (event.key === 'Escape') {
+      exitInspectionMode();
+      event.preventDefault();
+      event.stopPropagation();
+    } else if (event.key === 'Tab') {
+      // If this is the first Tab press, initialize the focusable elements
+      if (focusableElements.length === 0) {
+        focusableElements = findFocusableElements();
+        currentFocusIndex = -1;
+      }
+
+      if (focusableElements.length > 0) {
+        // Calculate the next index, wrapping around if necessary
+        const nextIndex = event.shiftKey 
+          ? (currentFocusIndex <= 0 ? focusableElements.length - 1 : currentFocusIndex - 1)
+          : (currentFocusIndex >= focusableElements.length - 1 ? 0 : currentFocusIndex + 1);
+
+        focusElementByIndex(nextIndex);
+
+        event.preventDefault();
+        event.stopPropagation();
+      }
+    } else if (event.key === 'Enter' && currentFocusIndex >= 0 && currentFocusIndex < focusableElements.length) {
+      // Simulate a click on the currently focused element
+      const element = focusableElements[currentFocusIndex];
+
+      // Get the selector for this element
+      const selector = getSelector(element);
+
+      // Check if we have an active command mode
+      if (activeCommandMode === 'click-get') {
+        // Insert the selector for click with get
+        commandInput.value = `click("${selector}", "get")`;
+      } else if (activeCommandMode === 'write-get') {
+        // For write command, we need to check if there's already text in the input
+        const writeMatch = commandInput.value.match(/write\(['"]?(.*?)['"]?,/);
+        if (writeMatch && writeMatch[1]) {
+          // Preserve the existing text
+          const text = writeMatch[1];
+          commandInput.value = `write("${text}", "${selector}", "get")`;
+        } else {
+          // If no text found, just add the selector with empty text
+          commandInput.value = `write("", "${selector}", "get")`;
+
+          // Position cursor inside the first quotes for the user to enter text
+          setTimeout(() => {
+            commandInput.setSelectionRange(7, 7);
+            commandInput.focus();
+          }, 0);
+        }
+      } else {
+        // If no active command mode, check the current input value
+        const command = commandInput.value;
+
+        // Check if we're in a click or write command based on input value
+        if (command.startsWith('click(')) {
+          // Replace the selector in click('selector', 'get')
+          commandInput.value = `click("${selector}", "get")`;
+        } else if (command.startsWith('write(')) {
+          // For write command, we need to preserve the text
+          const writeMatch = command.match(/write\(['"]?(.*?)['"]?,/);
+          if (writeMatch && writeMatch[1]) {
+            const text = writeMatch[1];
+            commandInput.value = `write("${text}", "${selector}", "get")`;
+          } else {
+            // If no text found, just add the selector
+            commandInput.value = `write("", "${selector}", "get")`;
+
+            // Position cursor inside the first quotes
+            setTimeout(() => {
+              commandInput.setSelectionRange(7, 7);
+              commandInput.focus();
+            }, 0);
+          }
+        } else {
+          // Default to a get command
+          commandInput.value = `get("${selector}")`;
+        }
+      }
+
+      // Update status message
+      statusMessage.innerHTML = '';
+      const iconSpan = window.top.document.createElement('span');
+      iconSpan.innerHTML = '<svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"></polyline></svg>';
+      iconSpan.style.cssText = `
+        margin-right: 8px;
+        vertical-align: middle;
+        color: #4CAF50;
+      `;
+
+      const textSpan = window.top.document.createElement('span');
+
+      // Show different message based on active command mode
+      if (activeCommandMode === 'click-get') {
+        textSpan.textContent = `Selected element for click: ${selector}`;
+      } else if (activeCommandMode === 'write-get') {
+        textSpan.textContent = `Selected input element: ${selector}`;
+      } else {
+        textSpan.textContent = `Selected element: ${selector}`;
+      }
+
+      textSpan.style.cssText = `
+        vertical-align: middle;
+      `;
+
+      statusMessage.appendChild(iconSpan);
+      statusMessage.appendChild(textSpan);
+      statusMessage.style.borderLeftColor = '#4CAF50';
+      statusMessage.style.backgroundColor = 'rgba(76, 175, 80, 0.1)';
+
+      // Exit inspection mode
+      exitInspectionMode();
+
+      // Focus the command input
+      commandInput.focus();
+
+      event.preventDefault();
+      event.stopPropagation();
+    }
+  };
+
+  // Check if an element is part of the REPL panel
+  const isPartOfReplPanel = (element: HTMLElement): boolean => {
+    let current: HTMLElement | null = element;
+
+    while (current) {
+      if (current === replContainer) {
+        return true;
+      }
+      current = current.parentElement;
+    }
+
+    return false;
+  };
+
+  // Hide highlight and tooltip
+  const hideHighlightAndTooltip = () => {
+    if (highlightOverlay) {
+      highlightOverlay.style.display = 'none';
+    }
+
+    if (tooltipElement) {
+      tooltipElement.style.display = 'none';
+    }
+  };
+
+  // Exit inspection mode
+  const exitInspectionMode = () => {
+    isInspectionMode = false;
+
+    // Reset button style
+    inspectButton.style.backgroundColor = '';
+    inspectButton.style.boxShadow = '0 4px 6px rgba(0, 0, 0, 0.1), 0 1px 3px rgba(0, 0, 0, 0.1)';
+
+    // Hide highlight and tooltip
+    hideHighlightAndTooltip();
+
+    // Reset cursor in the iframe
+    if (iframeDocument) {
+      iframeDocument.body.style.cursor = '';
+
+      // Remove event listeners from iframe
+      iframeDocument.removeEventListener('mouseover', handleMouseOver);
+      iframeDocument.removeEventListener('click', handleElementClick);
+      iframeDocument.removeEventListener('keydown', handleKeyDown);
+
+      // Remove highlight and tooltip from iframe if they exist
+      if (highlightOverlay && highlightOverlay.parentNode) {
+        highlightOverlay.parentNode.removeChild(highlightOverlay);
+        highlightOverlay = null;
+      }
+
+      if (tooltipElement && tooltipElement.parentNode) {
+        tooltipElement.parentNode.removeChild(tooltipElement);
+        tooltipElement = null;
+      }
+    }
+
+    // Remove event listener from top document
+    window.top.document.removeEventListener('keydown', handleKeyDown);
+
+    // Reset status message if it's still showing inspection mode
+    if (statusMessage.textContent?.includes('Inspection mode active')) {
+      statusMessage.textContent = 'Ready to execute commands';
+      statusMessage.style.borderLeftColor = '#4a88ff';
+      statusMessage.style.backgroundColor = 'rgba(74, 136, 255, 0.1)';
+    }
+
+    // Reset iframe references
+    autIframe = null;
+    iframeDocument = null;
+
+    // Reset keyboard navigation state
+    focusableElements = [];
+    currentFocusIndex = -1;
+
+    // Reset active command mode
+    activeCommandMode = null;
+  };
+
 
   // Add timeout to fetch request
   const fetchWithTimeout = (url, options, timeout = 10000) => {
@@ -1738,6 +2594,8 @@ Cypress.on('test:before:run', () => {
   buttonsContainer.appendChild(runButton);
   buttonsContainer.appendChild(exportButton);
   buttonsContainer.appendChild(resetButton);
+  buttonsContainer.appendChild(inspectButton);
+  buttonsContainer.appendChild(smartSelectorButton);
 
   // Assemble the content container
   contentContainer.appendChild(inputContainer);

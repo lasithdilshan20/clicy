@@ -9,10 +9,20 @@ const initCommand = hasInitCommand ? args[0] : '';
 
 // Function to start the server
 function startServer() {
-  console.log('Starting Clicy server...');
+  const isQuietMode = process.env.CLICY_QUIET === 'true';
+
+  if (!isQuietMode) {
+    console.log('Starting Clicy server...');
+  }
+
+  // Set environment variable to hide server startup message
+  const env = { ...process.env, CLICY_QUIET: process.env.CLICY_QUIET || 'false' };
+
   const serverProcess = spawn('npx', ['ts-node', 'cli/server.ts'], {
-    stdio: 'inherit',
-    shell: true
+    stdio: isQuietMode ? 'ignore' : 'inherit',
+    shell: true,
+    env,
+    windowsHide: true
   });
 
   serverProcess.on('error', (error) => {
@@ -23,7 +33,9 @@ function startServer() {
   // Give the server a moment to start up
   return new Promise<void>((resolve) => {
     setTimeout(() => {
-      console.log('Server started successfully');
+      if (!isQuietMode) {
+        console.log('Server started successfully');
+      }
       resolve();
     }, 2000);
   });
@@ -34,7 +46,8 @@ function launchCypress() {
   console.log('Launching Cypress...');
   const cypressProcess = spawn('npx', ['cypress', 'open', '--e2e', '--browser', 'chrome'], {
     stdio: 'inherit',
-    shell: true
+    shell: true,
+    windowsHide: true
   });
 
   cypressProcess.on('error', (error) => {
@@ -50,7 +63,7 @@ function injectInitialCommand(command: string) {
   if (!command) return;
 
   console.log(`Injecting initial command: ${command}`);
-  
+
   // Create the live.cy.ts file with the initial command
   const specPath = path.join(process.cwd(), 'cypress', 'e2e', 'live.cy.ts');
   const content = `
@@ -60,20 +73,20 @@ describe('Live Test', () => {
   });
 });
 `;
-  
+
   // Ensure the directory exists
   const dir = path.dirname(specPath);
   if (!fs.existsSync(dir)) {
     fs.mkdirSync(dir, { recursive: true });
   }
-  
+
   fs.writeFileSync(specPath, content);
-  
+
   // Also update the history file
   const historyPath = path.join(process.cwd(), 'CliCy-history.json');
   const historyData = { commands: [command] };
   fs.writeFileSync(historyPath, JSON.stringify(historyData, null, 2));
-  
+
   console.log('Initial command injected successfully');
 }
 
@@ -82,15 +95,15 @@ async function main() {
   try {
     // Start the server first
     await startServer();
-    
+
     // Inject initial command if provided
     if (hasInitCommand) {
       injectInitialCommand(initCommand);
     }
-    
+
     // Then launch Cypress
     const cypressProcess = launchCypress();
-    
+
     // Handle process termination
     process.on('SIGINT', () => {
       console.log('Shutting down...');

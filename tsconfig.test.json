@@ -10,8 +10,9 @@
     "skipLibCheck": true,
     "forceConsistentCasingInFileNames": true,
     "resolveJsonModule": true,
-    "types": ["jest", "node"]
+    "types": ["jest", "node", "@testing-library/jest-dom"],
+    "jsx": "react"
   },
-  "include": ["**/*.ts"],
-  "exclude": ["node_modules", "dist", "cypress", "tests"]
+  "include": ["src/**/*.ts", "tests/**/*.ts"],
+  "exclude": ["node_modules", "dist", "cypress"]
 }

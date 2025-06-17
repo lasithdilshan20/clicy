@@ -99,5 +99,8 @@ app.post('/reset', (req, res) => {
 
 // Start the server
 app.listen(PORT, () => {
-  console.log(`Clicy server running on http://localhost:${PORT}`);
+  // Only show the server message if not in quiet mode
+  if (process.env.CLICY_QUIET !== 'true') {
+    console.log(`Clicy server running on http://localhost:${PORT}`);
+  }
 });
