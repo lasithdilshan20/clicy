@@ -15,13 +15,38 @@ const ICONS = {
 
 // Define available commands for autocomplete
 const availableCommands = [
+  // Navigation & Origin Commands
   { command: 'goto()', description: 'Navigate to a URL', example: 'goto("https://example.com")' },
+  { command: 'visit()', description: 'Navigate to a URL', example: 'visit("https://example.com")' },
+  { command: 'origin()', description: 'Execute commands in the context of a different origin', example: 'origin("https://example.com", () => { cy.get(".button").click() })' },
+
+  // Action Commands
   { command: 'click()', description: 'Click on an element with text', example: 'click("Login")' },
   { command: 'click() with get', description: 'Click on an element by CSS selector', example: 'click(".button", "get")' },
   { command: 'write()', description: 'Type text into an input field', example: 'write("username", "Username")' },
   { command: 'write() with get', description: 'Type text into an input field by CSS selector', example: 'write("username", "#username", "get")' },
+  { command: 'type()', description: 'Type text into an input field by CSS selector', example: 'type("Hello", "#input")' },
+  { command: 'clear()', description: 'Clear the content of an input field', example: 'clear("#input")' },
+  { command: 'check()', description: 'Check a checkbox or radio button', example: 'check("#checkbox")' },
+  { command: 'uncheck()', description: 'Uncheck a checkbox', example: 'uncheck("#checkbox")' },
+  { command: 'select()', description: 'Select an option from a dropdown', example: 'select("#dropdown", "Option 1")' },
   { command: 'get()', description: 'Select elements by CSS selector', example: 'get(".button")' },
   { command: 'contains()', description: 'Find elements containing specific text', example: 'contains("Submit")' },
+
+  // Assertion Commands
+  { command: 'shouldContain()', description: 'Assert that an element contains specific text', example: 'shouldContain("#element", "Expected text")' },
+  { command: 'shouldBeVisible()', description: 'Assert that an element is visible', example: 'shouldBeVisible("#element")' },
+  { command: 'shouldHaveValue()', description: 'Assert that an element has a specific value', example: 'shouldHaveValue("#input", "Expected value")' },
+
+  // Network & Session Commands
+  { command: 'intercept()', description: 'Intercept a network request', example: 'intercept("GET", "/api/users", "getUsers")' },
+  { command: 'waitForAlias()', description: 'Wait for an aliased resource to resolve', example: 'waitForAlias("getUsers")' },
+  { command: 'session()', description: 'Create or restore a session', example: 'session("user", () => { cy.login() })' },
+
+  // Utility Commands
+  { command: 'wait()', description: 'Wait for a specified amount of time', example: 'wait(1000)' },
+  { command: 'reload()', description: 'Reload the current page', example: 'reload()' },
+  { command: 'screenshot()', description: 'Take a screenshot', example: 'screenshot("homepage")' },
   { command: 'closeBrowser()', description: 'Close the browser (not needed in Cypress)', example: 'closeBrowser()' },
 ];
 
@@ -508,6 +533,102 @@ Cypress.on('test:before:run', () => {
         // Automatically activate inspection mode
         inspectButton.click();
       }
+      // Special handling for type()
+      else if (cmd.command === 'type()') {
+        commandInput.value = cmd.example;
+        autocompleteDropdown.style.display = 'none';
+        commandInput.focus();
+
+        // Set active command mode for element inspection
+        activeCommandMode = 'type';
+
+        // Automatically activate inspection mode
+        inspectButton.click();
+      }
+      // Special handling for clear()
+      else if (cmd.command === 'clear()') {
+        commandInput.value = cmd.example;
+        autocompleteDropdown.style.display = 'none';
+        commandInput.focus();
+
+        // Set active command mode for element inspection
+        activeCommandMode = 'clear';
+
+        // Automatically activate inspection mode
+        inspectButton.click();
+      }
+      // Special handling for check()
+      else if (cmd.command === 'check()') {
+        commandInput.value = cmd.example;
+        autocompleteDropdown.style.display = 'none';
+        commandInput.focus();
+
+        // Set active command mode for element inspection
+        activeCommandMode = 'check';
+
+        // Automatically activate inspection mode
+        inspectButton.click();
+      }
+      // Special handling for uncheck()
+      else if (cmd.command === 'uncheck()') {
+        commandInput.value = cmd.example;
+        autocompleteDropdown.style.display = 'none';
+        commandInput.focus();
+
+        // Set active command mode for element inspection
+        activeCommandMode = 'uncheck';
+
+        // Automatically activate inspection mode
+        inspectButton.click();
+      }
+      // Special handling for select()
+      else if (cmd.command === 'select()') {
+        commandInput.value = cmd.example;
+        autocompleteDropdown.style.display = 'none';
+        commandInput.focus();
+
+        // Set active command mode for element inspection
+        activeCommandMode = 'select';
+
+        // Automatically activate inspection mode
+        inspectButton.click();
+      }
+      // Special handling for shouldContain()
+      else if (cmd.command === 'shouldContain()') {
+        commandInput.value = cmd.example;
+        autocompleteDropdown.style.display = 'none';
+        commandInput.focus();
+
+        // Set active command mode for element inspection
+        activeCommandMode = 'shouldContain';
+
+        // Automatically activate inspection mode
+        inspectButton.click();
+      }
+      // Special handling for shouldBeVisible()
+      else if (cmd.command === 'shouldBeVisible()') {
+        commandInput.value = cmd.example;
+        autocompleteDropdown.style.display = 'none';
+        commandInput.focus();
+
+        // Set active command mode for element inspection
+        activeCommandMode = 'shouldBeVisible';
+
+        // Automatically activate inspection mode
+        inspectButton.click();
+      }
+      // Special handling for shouldHaveValue()
+      else if (cmd.command === 'shouldHaveValue()') {
+        commandInput.value = cmd.example;
+        autocompleteDropdown.style.display = 'none';
+        commandInput.focus();
+
+        // Set active command mode for element inspection
+        activeCommandMode = 'shouldHaveValue';
+
+        // Automatically activate inspection mode
+        inspectButton.click();
+      }
       // Fallback to just inserting the example
       else {
         commandInput.value = cmd.example;
@@ -789,7 +910,7 @@ Cypress.on('test:before:run', () => {
   let iframeDocument: Document | null = null;
   let focusableElements: HTMLElement[] = []; // Array to store focusable elements
   let currentFocusIndex = -1; // Index of currently focused element
-  let activeCommandMode: 'click-get' | 'write-get' | null = null; // Track the active command mode
+  let activeCommandMode: 'click-get' | 'write-get' | 'type' | 'clear' | 'check' | 'uncheck' | 'select' | 'get' | 'shouldContain' | 'shouldBeVisible' | 'shouldHaveValue' | null = null; // Track the active command mode
 
   // Function to get the AUT iframe
   const getAutIframe = (): HTMLIFrameElement | null => {
@@ -1162,6 +1283,65 @@ Cypress.on('test:before:run', () => {
           commandInput.focus();
         }, 0);
       }
+    } else if (activeCommandMode === 'type') {
+      // For type command, we need to check if there's already text in the input
+      const typeMatch = commandInput.value.match(/type\(['"]?(.*?)['"]?,/);
+      if (typeMatch && typeMatch[1]) {
+        // Preserve the existing text
+        const text = typeMatch[1];
+        commandInput.value = `type("${text}", "${selector}")`;
+      } else {
+        // If no text found, just add the selector with empty text
+        commandInput.value = `type("", "${selector}")`;
+
+        // Position cursor inside the first quotes for the user to enter text
+        setTimeout(() => {
+          commandInput.setSelectionRange(6, 6);
+          commandInput.focus();
+        }, 0);
+      }
+    } else if (activeCommandMode === 'clear') {
+      // Insert the selector for clear command
+      commandInput.value = `clear("${selector}")`;
+    } else if (activeCommandMode === 'check') {
+      // Insert the selector for check command
+      commandInput.value = `check("${selector}")`;
+    } else if (activeCommandMode === 'uncheck') {
+      // Insert the selector for uncheck command
+      commandInput.value = `uncheck("${selector}")`;
+    } else if (activeCommandMode === 'select') {
+      // For select command, we need to add a value parameter
+      commandInput.value = `select("${selector}", "")`;
+
+      // Position cursor inside the second quotes for the user to enter the value
+      setTimeout(() => {
+        commandInput.setSelectionRange(commandInput.value.length - 2, commandInput.value.length - 2);
+        commandInput.focus();
+      }, 0);
+    } else if (activeCommandMode === 'get') {
+      // Insert the selector for get command
+      commandInput.value = `get("${selector}")`;
+    } else if (activeCommandMode === 'shouldContain') {
+      // For shouldContain command, we need to add a text parameter
+      commandInput.value = `shouldContain("${selector}", "")`;
+
+      // Position cursor inside the second quotes for the user to enter the text
+      setTimeout(() => {
+        commandInput.setSelectionRange(commandInput.value.length - 2, commandInput.value.length - 2);
+        commandInput.focus();
+      }, 0);
+    } else if (activeCommandMode === 'shouldBeVisible') {
+      // Insert the selector for shouldBeVisible command
+      commandInput.value = `shouldBeVisible("${selector}")`;
+    } else if (activeCommandMode === 'shouldHaveValue') {
+      // For shouldHaveValue command, we need to add a value parameter
+      commandInput.value = `shouldHaveValue("${selector}", "")`;
+
+      // Position cursor inside the second quotes for the user to enter the value
+      setTimeout(() => {
+        commandInput.setSelectionRange(commandInput.value.length - 2, commandInput.value.length - 2);
+        commandInput.focus();
+      }, 0);
     } else {
       // If no active command mode, check the current input value
       const command = commandInput.value;
@@ -1209,6 +1389,24 @@ Cypress.on('test:before:run', () => {
       textSpan.textContent = `Selected element for click: ${selector}`;
     } else if (activeCommandMode === 'write-get') {
       textSpan.textContent = `Selected input element: ${selector}`;
+    } else if (activeCommandMode === 'type') {
+      textSpan.textContent = `Selected input element for type: ${selector}`;
+    } else if (activeCommandMode === 'clear') {
+      textSpan.textContent = `Selected input element to clear: ${selector}`;
+    } else if (activeCommandMode === 'check') {
+      textSpan.textContent = `Selected checkbox to check: ${selector}`;
+    } else if (activeCommandMode === 'uncheck') {
+      textSpan.textContent = `Selected checkbox to uncheck: ${selector}`;
+    } else if (activeCommandMode === 'select') {
+      textSpan.textContent = `Selected dropdown: ${selector}`;
+    } else if (activeCommandMode === 'get') {
+      textSpan.textContent = `Selected element for get: ${selector}`;
+    } else if (activeCommandMode === 'shouldContain') {
+      textSpan.textContent = `Selected element for assertion: ${selector}`;
+    } else if (activeCommandMode === 'shouldBeVisible') {
+      textSpan.textContent = `Selected element for visibility assertion: ${selector}`;
+    } else if (activeCommandMode === 'shouldHaveValue') {
+      textSpan.textContent = `Selected input for value assertion: ${selector}`;
     } else {
       textSpan.textContent = `Selected element: ${selector}`;
     }
@@ -1349,6 +1547,65 @@ Cypress.on('test:before:run', () => {
             commandInput.focus();
           }, 0);
         }
+      } else if (activeCommandMode === 'type') {
+        // For type command, we need to check if there's already text in the input
+        const typeMatch = commandInput.value.match(/type\(['"]?(.*?)['"]?,/);
+        if (typeMatch && typeMatch[1]) {
+          // Preserve the existing text
+          const text = typeMatch[1];
+          commandInput.value = `type("${text}", "${selector}")`;
+        } else {
+          // If no text found, just add the selector with empty text
+          commandInput.value = `type("", "${selector}")`;
+
+          // Position cursor inside the first quotes for the user to enter text
+          setTimeout(() => {
+            commandInput.setSelectionRange(6, 6);
+            commandInput.focus();
+          }, 0);
+        }
+      } else if (activeCommandMode === 'clear') {
+        // Insert the selector for clear command
+        commandInput.value = `clear("${selector}")`;
+      } else if (activeCommandMode === 'check') {
+        // Insert the selector for check command
+        commandInput.value = `check("${selector}")`;
+      } else if (activeCommandMode === 'uncheck') {
+        // Insert the selector for uncheck command
+        commandInput.value = `uncheck("${selector}")`;
+      } else if (activeCommandMode === 'select') {
+        // For select command, we need to add a value parameter
+        commandInput.value = `select("${selector}", "")`;
+
+        // Position cursor inside the second quotes for the user to enter the value
+        setTimeout(() => {
+          commandInput.setSelectionRange(commandInput.value.length - 2, commandInput.value.length - 2);
+          commandInput.focus();
+        }, 0);
+      } else if (activeCommandMode === 'get') {
+        // Insert the selector for get command
+        commandInput.value = `get("${selector}")`;
+      } else if (activeCommandMode === 'shouldContain') {
+        // For shouldContain command, we need to add a text parameter
+        commandInput.value = `shouldContain("${selector}", "")`;
+
+        // Position cursor inside the second quotes for the user to enter the text
+        setTimeout(() => {
+          commandInput.setSelectionRange(commandInput.value.length - 2, commandInput.value.length - 2);
+          commandInput.focus();
+        }, 0);
+      } else if (activeCommandMode === 'shouldBeVisible') {
+        // Insert the selector for shouldBeVisible command
+        commandInput.value = `shouldBeVisible("${selector}")`;
+      } else if (activeCommandMode === 'shouldHaveValue') {
+        // For shouldHaveValue command, we need to add a value parameter
+        commandInput.value = `shouldHaveValue("${selector}", "")`;
+
+        // Position cursor inside the second quotes for the user to enter the value
+        setTimeout(() => {
+          commandInput.setSelectionRange(commandInput.value.length - 2, commandInput.value.length - 2);
+          commandInput.focus();
+        }, 0);
       } else {
         // If no active command mode, check the current input value
         const command = commandInput.value;
@@ -1396,6 +1653,24 @@ Cypress.on('test:before:run', () => {
         textSpan.textContent = `Selected element for click: ${selector}`;
       } else if (activeCommandMode === 'write-get') {
         textSpan.textContent = `Selected input element: ${selector}`;
+      } else if (activeCommandMode === 'type') {
+        textSpan.textContent = `Selected input element for type: ${selector}`;
+      } else if (activeCommandMode === 'clear') {
+        textSpan.textContent = `Selected input element to clear: ${selector}`;
+      } else if (activeCommandMode === 'check') {
+        textSpan.textContent = `Selected checkbox to check: ${selector}`;
+      } else if (activeCommandMode === 'uncheck') {
+        textSpan.textContent = `Selected checkbox to uncheck: ${selector}`;
+      } else if (activeCommandMode === 'select') {
+        textSpan.textContent = `Selected dropdown: ${selector}`;
+      } else if (activeCommandMode === 'get') {
+        textSpan.textContent = `Selected element for get: ${selector}`;
+      } else if (activeCommandMode === 'shouldContain') {
+        textSpan.textContent = `Selected element for assertion: ${selector}`;
+      } else if (activeCommandMode === 'shouldBeVisible') {
+        textSpan.textContent = `Selected element for visibility assertion: ${selector}`;
+      } else if (activeCommandMode === 'shouldHaveValue') {
+        textSpan.textContent = `Selected input for value assertion: ${selector}`;
       } else {
         textSpan.textContent = `Selected element: ${selector}`;
       }
@@ -1636,6 +1911,35 @@ Cypress.on('test:before:run', () => {
       if (textMatch && textMatch[1]) {
         const text = textMatch[1];
         processedCommand = `contains("${text}")`;
+      }
+    }
+    // Handle shouldBeVisible command
+    else if (processedCommand.startsWith('shouldBeVisible(')) {
+      // Extract the selector from shouldBeVisible('selector')
+      const selectorMatch = processedCommand.match(/shouldBeVisible\(['"]?(.*?)['"]?\)/);
+      if (selectorMatch && selectorMatch[1]) {
+        const selector = selectorMatch[1];
+        processedCommand = `get("${selector}").should("be.visible")`;
+      }
+    }
+    // Handle shouldContain command
+    else if (processedCommand.startsWith('shouldContain(')) {
+      // Extract the selector and text from shouldContain('selector', 'text')
+      const match = processedCommand.match(/shouldContain\(['"]?(.*?)['"]?,\s*['"]?(.*?)['"]?\)/);
+      if (match && match[1] && match[2]) {
+        const selector = match[1];
+        const text = match[2];
+        processedCommand = `get("${selector}").should("contain", "${text}")`;
+      }
+    }
+    // Handle shouldHaveValue command
+    else if (processedCommand.startsWith('shouldHaveValue(')) {
+      // Extract the selector and value from shouldHaveValue('selector', 'value')
+      const match = processedCommand.match(/shouldHaveValue\(['"]?(.*?)['"]?,\s*['"]?(.*?)['"]?\)/);
+      if (match && match[1] && match[2]) {
+        const selector = match[1];
+        const value = match[2];
+        processedCommand = `get("${selector}").should("have.value", "${value}")`;
       }
     }
 
