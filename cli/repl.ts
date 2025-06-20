@@ -2,7 +2,7 @@ import repl from 'repl';
 import fs from 'fs';
 import path from 'path';
 import { writeCommandToFile, exportAllToCodeFile, readCommandsFromFile } from '../utils/fileWriter';
-import { click, write, goto, closeBrowser, get, contains } from '../commands/dsl';
+import * as dslCommands from '../commands/dsl';
 
 // Color constants for console output
 const colors = {
@@ -157,35 +157,39 @@ function mapCommand(input: string): string {
 
   switch (cmd) {
     case 'openBrowser': 
-      return goto('') || '';
-    case 'closeBrowser': return closeBrowser();
+      return dslCommands.goto('') || '';
+    case 'closeBrowser': return dslCommands.closeBrowser();
     case 'goto': {
       if (!args.trim()) {
         return 'PROMPT_FOR_URL';
       }
-      return goto(args.replace(/['"]/g, '')) || '';
+      return dslCommands.goto(args.replace(/['"]/g, '')) || '';
     }
     case 'click': {
       // Check if the argument includes a selector type
       if (args.includes(',')) {
         const [selector, selectorType] = args.split(',').map(x => x.trim().replace(/['"]/g, ''));
-        return click(selector, selectorType as 'contains' | 'get');
+        return dslCommands.click(selector, selectorType as 'contains' | 'get');
       }
-      return click(args.replace(/['"]/g, ''));
+      return dslCommands.click(args.replace(/['"]/g, ''));
     }
     case 'write': {
       // Check if the argument includes a selector type
       if (args.split(',').length > 2) {
         const [text, selector, selectorType] = args.split(',').map(x => x.trim().replace(/['"]/g, ''));
-        return write(text, selector, selectorType as 'contains' | 'get');
+        return dslCommands.write(text, selector, selectorType as 'contains' | 'get');
       }
       const [text, selector] = args.split(',').map(x => x.trim().replace(/['"]/g, ''));
-      return write(text, selector);
+      return dslCommands.write(text, selector);
     }
-    case 'get': return get(args.replace(/['"]/g, ''));
-    case 'contains': return contains(args.replace(/['"]/g, ''));
+    case 'get': return dslCommands.get(args.replace(/['"]/g, ''));
+    case 'contains': return dslCommands.contains(args.replace(/['"]/g, ''));
     default: return '';
   }
 }
 
+// Export the REPL instance as default
 export default clicyRepl;
+
+// Export all DSL commands for programmatic usage
+export const commands = dslCommands;

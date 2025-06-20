@@ -1,8 +1,6 @@
 {
   "commands": [
-    "cy.visit(\"https://www.ebay.com\")",
-    "cy.get(\".gh-search-button__label\").should(\"be.visible\")",
-    "cy.get(\"#gh-ac\").type(\"Apple iphone\")",
-    "cy.get(\".gh-search-button__label\").click()"
+    "cy",
+    "cy.visit(\"https://www.amazon.com\")"
   ]
 }

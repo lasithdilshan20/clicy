@@ -6,6 +6,21 @@
   "bin": {
     "clicy": "dist/bin/clicy.js"
   },
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/yourusername/clicy.git"
+  },
+  "homepage": "https://github.com/yourusername/clicy",
+  "bugs": {
+    "url": "https://github.com/yourusername/clicy/issues"
+  },
+  "files": [
+    "dist",
+    "bin",
+    "cli",
+    "commands",
+    "utils"
+  ],
   "scripts": {
     "build": "tsc",
     "start": "node dist/bin/clicy.js",
@@ -25,8 +40,11 @@
     "testing",
     "repl"
   ],
-  "author": "",
+  "author": "Your Name <your.email@example.com>",
   "license": "MIT",
+  "engines": {
+    "node": ">=14.0.0"
+  },
   "dependencies": {
     "body-parser": "^1.20.2",
     "cypress": "14.4.1",

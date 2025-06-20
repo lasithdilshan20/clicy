@@ -22,7 +22,8 @@ function startServer() {
     stdio: isQuietMode ? 'ignore' : 'inherit',
     shell: true,
     env,
-    windowsHide: true
+    windowsHide: true,
+    detached: true // Added this option
   });
 
   serverProcess.on('error', (error) => {

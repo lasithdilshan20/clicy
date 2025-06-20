@@ -11,6 +11,7 @@ const ICONS = {
   reset: `<svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 2v6h6"></path><path d="M3 13a9 9 0 1 0 3-7.7L3 8"></path></svg>`,
   success: `<svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="#4CAF50" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M22 11.08V12a10 10 0 1 1-5.93-9.14"></path><polyline points="22 4 12 14.01 9 11.01"></polyline></svg>`,
   error: `<svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="#f44336" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"></circle><line x1="15" y1="9" x2="9" y2="15"></line><line x1="9" y1="9" x2="15" y2="15"></line></svg>`,
+  warning: `<svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="#FF9800" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M10.29 3.86L1.82 18a2 2 0 0 0 1.71 3h16.94a2 2 0 0 0 1.71-3L13.71 3.86a2 2 0 0 0-3.42 0z"></path><line x1="12" y1="9" x2="12" y2="13"></line><line x1="12" y1="17" x2="12.01" y2="17"></line></svg>`,
 };
 
 // Define available commands for autocomplete
@@ -252,7 +253,23 @@ Cypress.on('test:before:run', () => {
     transition: all 0.3s ease;
   `;
 
-  // Create the title
+  // Create the title with favicon
+  const titleContainer = window.top.document.createElement('div');
+  titleContainer.style.cssText = `
+    display: flex;
+    align-items: center;
+    gap: 8px;
+  `;
+
+  // Add favicon
+  const favicon = window.top.document.createElement('img');
+  favicon.src = 'http://localhost:4000/favicon.ico?v=' + new Date().getTime();
+  favicon.style.cssText = `
+    width: 16px;
+    height: 16px;
+    border-radius: 3px;
+  `;
+
   const title = window.top.document.createElement('div');
   title.textContent = 'CliCy Commands';
   title.style.cssText = `
@@ -262,6 +279,9 @@ Cypress.on('test:before:run', () => {
     letter-spacing: 0.5px;
     text-shadow: 0 1px 2px rgba(0, 0, 0, 0.3);
   `;
+
+  titleContainer.appendChild(favicon);
+  titleContainer.appendChild(title);
 
   // Create the toggle button
   const toggleButton = window.top.document.createElement('div');
@@ -309,7 +329,7 @@ Cypress.on('test:before:run', () => {
   });
 
   // Assemble the header
-  headerBar.appendChild(title);
+  headerBar.appendChild(titleContainer);
   headerBar.appendChild(toggleButton);
 
   // Create the content container
@@ -1823,6 +1843,34 @@ Cypress.on('test:before:run', () => {
       return;
     }
 
+    // Check for potential canvas-related commands that might cause duplicate declarations
+    if (command.includes('createCanvas') || command.includes('getContext')) {
+      console.warn('[CLICY DEBUG] Detected potential canvas-related command that might cause duplicate declarations');
+
+      // Show a warning message to the user
+      statusMessage.innerHTML = '';
+      const iconSpan = window.top.document.createElement('span');
+      iconSpan.innerHTML = ICONS.warning;
+      iconSpan.style.cssText = `
+        margin-right: 8px;
+        vertical-align: middle;
+      `;
+
+      const textSpan = window.top.document.createElement('span');
+      textSpan.textContent = 'Warning: This command might cause duplicate declarations. Consider using a different approach.';
+      textSpan.style.cssText = `
+        vertical-align: middle;
+      `;
+
+      statusMessage.appendChild(iconSpan);
+      statusMessage.appendChild(textSpan);
+      statusMessage.style.borderLeftColor = '#FF9800';
+      statusMessage.style.backgroundColor = 'rgba(255, 152, 0, 0.1)';
+
+      // Don't execute the command to prevent errors
+      return;
+    }
+
     // Process special commands like goto, click, write, get, contains
     let processedCommand = command;
 
@@ -1940,6 +1988,18 @@ Cypress.on('test:before:run', () => {
         const selector = match[1];
         const value = match[2];
         processedCommand = `get("${selector}").should("have.value", "${value}")`;
+      }
+    }
+    // Handle wait command with numeric suffix (e.g., wait3000 or wait3000())
+    else if (/^wait\d+(\(\))?$/.test(processedCommand)) {
+      // Extract the number from the command (e.g., 3000 from wait3000 or wait3000())
+      const waitTime = processedCommand.replace(/wait(\d+)(?:\(\))?/, '$1');
+      if (!isNaN(parseInt(waitTime))) {
+        // Use a safer approach that avoids duplicate function declarations
+        processedCommand = `wait(${waitTime})`;
+
+        // Add a comment to explain the fix
+        console.log(`[CLICY DEBUG] Converted wait${waitTime} to wait(${waitTime}) to avoid potential duplicate function declarations`);
       }
     }
 

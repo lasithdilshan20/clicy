@@ -12,6 +12,35 @@ Cypress-based automation tool with REPL (Read-Eval-Print Loop) experience simila
 
 ## Installation
 
+### Option 1: Install from npm (Recommended)
+
+```bash
+# Install globally
+npm install -g clicy
+
+# Or install locally in your project
+npm install --save-dev clicy
+```
+
+### Publishing to npm
+
+If you're the package maintainer and want to publish to npm:
+
+```bash
+# Login to npm
+npm login
+
+# Build the project
+npm run build
+
+# Publish to npm
+npm publish
+```
+
+Make sure to update the "author" field in package.json with your information before publishing.
+
+### Option 2: Install from source
+
 ```bash
 # Clone the repository
 git clone https://github.com/yourusername/clicy.git
@@ -22,6 +51,9 @@ npm install
 
 # Build the project
 npm run build
+
+# Optionally, link it globally
+npm link
 ```
 
 ## Usage
@@ -31,10 +63,63 @@ npm run build
 Start the REPL in CLI mode:
 
 ```bash
-npm start
-# or
+# If installed globally
+clicy
+
+# If installed locally
 npx clicy
+
+# If using from source
+npm start
 ```
+
+### Node.js Plugin Mode
+
+You can also use clicy programmatically in your Node.js projects:
+
+```javascript
+// Import the clicy REPL and commands
+const clicy = require('clicy');
+const { commands } = require('clicy');
+
+// Use clicy in your code
+// Example: Create a custom automation script
+const runAutomation = async () => {
+  // Access the DSL commands programmatically
+  const gotoCommand = commands.goto('https://example.com');
+  const clickCommand = commands.click('Login');
+
+  console.log('Generated Cypress commands:');
+  console.log(gotoCommand);  // Outputs: cy.visit("https://example.com");
+  console.log(clickCommand); // Outputs: cy.contains("Login").click();
+
+  // Or use the REPL directly
+  // Note: The REPL will start automatically when imported
+};
+
+runAutomation();
+```
+
+For TypeScript projects:
+
+```typescript
+// Import the clicy REPL and commands
+import clicy, { commands } from 'clicy';
+
+// Use clicy in your code
+// Example: Generate Cypress commands programmatically
+const gotoCommand = commands.goto('https://example.com');
+const clickCommand = commands.click('Login', 'get'); // Using 'get' selector type
+```
+
+Available DSL Commands:
+
+- Navigation: `goto()`, `visit()`, `origin()`
+- Actions: `click()`, `write()`, `type()`, `clear()`, `check()`, `uncheck()`, `select()`
+- Selectors: `get()`, `contains()`
+- Assertions: `shouldContain()`, `shouldBeVisible()`, `shouldHaveValue()`
+- Network: `intercept()`, `waitForAlias()`, `session()`
+- Utilities: `wait()`, `reload()`, `screenshot()`
 
 ### Cypress Test Runner UI Mode (NEW!)
 
