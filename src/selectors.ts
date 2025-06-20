@@ -67,8 +67,9 @@ export const getBestSelector = (element: HTMLElement): string => {
 export const getSmartSelector = (element: HTMLElement): string => {
   try {
     // Try to get a suggested query from @testing-library/dom
-    const suggestions = queries.getSuggestedQuery(element, 'get');
-    
+    // getSuggestedQuery might not be available in all versions of @testing-library/dom
+    const suggestions = (queries as any).getSuggestedQuery?.(element, 'get');
+
     if (suggestions) {
       // Convert the suggestion to a Cypress-friendly selector
       if (suggestions.queryName === 'getByRole') {
@@ -89,7 +90,7 @@ export const getSmartSelector = (element: HTMLElement): string => {
         return `[placeholder="${suggestions.queryValue}"]`;
       }
     }
-    
+
     // If no suggestion found or not convertible to Cypress selector, fall back to getBestSelector
     return getBestSelector(element);
   } catch (error) {

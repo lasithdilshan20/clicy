@@ -1,5 +1,15 @@
 // This file injects a REPL UI into the Cypress Test Runner
+//@ts-nocheck
 import { queries } from '@testing-library/dom';
+
+// Helper function to safely access window.top
+const getTopWindow = (): Window => {
+  const topWindow = window.top;
+  if (!topWindow) {
+    throw new Error("window.top is null");
+  }
+  return topWindow;
+};
 
 // SVG Icons for a more futuristic UI
 const ICONS = {
@@ -56,7 +66,7 @@ Cypress.on('test:before:run', () => {
   console.log('[CLICY DEBUG] Test before run - Recreating UI');
 
   // Remove existing UI if it exists to ensure fresh event listeners
-  const existingUI = window.top.document.querySelector('#clicy-repl');
+  const existingUI = getTopWindow().document.querySelector('#clicy-repl');
   if (existingUI) {
     console.log('[CLICY DEBUG] Removing existing UI');
     existingUI.remove();
@@ -69,7 +79,7 @@ Cypress.on('test:before:run', () => {
   const checkServerWithRetries = (retries = 5, delay = 1000) => {
     console.log(`[CLICY DEBUG] Checking server connection (attempt ${6 - retries}/5)...`);
 
-    fetch('http://localhost:4000/commands', { 
+    fetch('http://localhost:4000/commands', {
       method: 'GET',
       signal: AbortSignal.timeout(1000)
     })
@@ -87,7 +97,7 @@ Cypress.on('test:before:run', () => {
           console.error('[CLICY DEBUG] All server connection attempts failed');
 
           // Create a notification at the top of the screen
-          const notification = window.top.document.createElement('div');
+          const notification = getTopWindow().document.createElement('div');
           notification.id = 'clicy-server-notification';
           notification.style.cssText = `
             position: fixed;
@@ -107,10 +117,10 @@ Cypress.on('test:before:run', () => {
             align-items: center;
           `;
 
-          const messageSpan = window.top.document.createElement('span');
+          const messageSpan = getTopWindow().document.createElement('span');
           messageSpan.textContent = 'Waiting for Clicy server to start... Commands will not work until the server is ready.';
 
-          const retryButton = window.top.document.createElement('button');
+          const retryButton = getTopWindow().document.createElement('button');
           retryButton.textContent = 'Retry Connection';
           retryButton.style.cssText = `
             margin-left: 16px;
@@ -147,7 +157,7 @@ Cypress.on('test:before:run', () => {
                 retryButton.style.display = 'none';
 
                 // Add a close button
-                const closeButton = window.top.document.createElement('button');
+                const closeButton = getTopWindow().document.createElement('button');
                 closeButton.textContent = '✕';
                 closeButton.style.cssText = `
                   margin-left: 16px;
@@ -183,7 +193,7 @@ Cypress.on('test:before:run', () => {
               });
           });
 
-          const closeButton = window.top.document.createElement('button');
+          const closeButton = getTopWindow().document.createElement('button');
           closeButton.textContent = '✕';
           closeButton.style.cssText = `
             margin-left: 16px;
@@ -208,7 +218,7 @@ Cypress.on('test:before:run', () => {
           notification.appendChild(retryButton);
           notification.appendChild(closeButton);
 
-          window.top.document.body.appendChild(notification);
+          getTopWindow().document.body.appendChild(notification);
         }
       });
   };
@@ -217,10 +227,10 @@ Cypress.on('test:before:run', () => {
   checkServerWithRetries();
 
   // Check if we have a saved collapsed state
-  const isCollapsed = window.top.localStorage.getItem('clicy-collapsed') === 'true';
+  const isCollapsed = getTopWindow().localStorage.getItem('clicy-collapsed') === 'true';
 
   // Create the REPL UI container
-  const replContainer = window.top.document.createElement('div');
+  const replContainer = getTopWindow().document.createElement('div');
   replContainer.id = 'clicy-repl';
   replContainer.style.cssText = `
     position: fixed;
@@ -240,7 +250,7 @@ Cypress.on('test:before:run', () => {
   `;
 
   // Create the header bar
-  const headerBar = window.top.document.createElement('div');
+  const headerBar = getTopWindow().document.createElement('div');
   headerBar.style.cssText = `
     display: flex;
     justify-content: space-between;
@@ -254,7 +264,7 @@ Cypress.on('test:before:run', () => {
   `;
 
   // Create the title with favicon
-  const titleContainer = window.top.document.createElement('div');
+  const titleContainer = getTopWindow().document.createElement('div');
   titleContainer.style.cssText = `
     display: flex;
     align-items: center;
@@ -262,7 +272,7 @@ Cypress.on('test:before:run', () => {
   `;
 
   // Add favicon
-  const favicon = window.top.document.createElement('img');
+  const favicon = getTopWindow().document.createElement('img');
   favicon.src = 'http://localhost:4000/favicon.ico?v=' + new Date().getTime();
   favicon.style.cssText = `
     width: 16px;
@@ -270,7 +280,7 @@ Cypress.on('test:before:run', () => {
     border-radius: 3px;
   `;
 
-  const title = window.top.document.createElement('div');
+  const title = getTopWindow().document.createElement('div');
   title.textContent = 'CliCy Commands';
   title.style.cssText = `
     font-weight: 600;
@@ -284,7 +294,7 @@ Cypress.on('test:before:run', () => {
   titleContainer.appendChild(title);
 
   // Create the toggle button
-  const toggleButton = window.top.document.createElement('div');
+  const toggleButton = getTopWindow().document.createElement('div');
   toggleButton.innerHTML = isCollapsed ? ICONS.chevronUp : ICONS.chevronDown;
   toggleButton.style.cssText = `
     display: flex;
@@ -318,13 +328,13 @@ Cypress.on('test:before:run', () => {
       replContainer.style.transform = '';
       toggleButton.innerHTML = ICONS.chevronDown;
       headerBar.style.borderBottom = '1px solid rgba(255, 255, 255, 0.1)';
-      window.top.localStorage.setItem('clicy-collapsed', 'false');
+      getTopWindow().localStorage.setItem('clicy-collapsed', 'false');
     } else {
       // Collapse
       replContainer.style.transform = 'translateY(calc(100% - 48px))';
       toggleButton.innerHTML = ICONS.chevronUp;
       headerBar.style.borderBottom = 'none';
-      window.top.localStorage.setItem('clicy-collapsed', 'true');
+      getTopWindow().localStorage.setItem('clicy-collapsed', 'true');
     }
   });
 
@@ -333,7 +343,7 @@ Cypress.on('test:before:run', () => {
   headerBar.appendChild(toggleButton);
 
   // Create the content container
-  const contentContainer = window.top.document.createElement('div');
+  const contentContainer = getTopWindow().document.createElement('div');
   contentContainer.style.cssText = `
     padding: 16px;
     display: flex;
@@ -342,7 +352,7 @@ Cypress.on('test:before:run', () => {
   `;
 
   // Create the input field
-  const inputContainer = window.top.document.createElement('div');
+  const inputContainer = getTopWindow().document.createElement('div');
   inputContainer.style.cssText = `
     display: flex;
     flex-direction: column;
@@ -350,7 +360,7 @@ Cypress.on('test:before:run', () => {
     position: relative;
   `;
 
-  const commandInput = window.top.document.createElement('input');
+  const commandInput = getTopWindow().document.createElement('input');
   commandInput.type = 'text';
   commandInput.placeholder = 'Enter Cypress command (e.g., contains("Login").click())';
   commandInput.style.cssText = `
@@ -368,7 +378,7 @@ Cypress.on('test:before:run', () => {
   `;
 
   // Create the command preview area
-  const commandPreview = window.top.document.createElement('div');
+  const commandPreview = getTopWindow().document.createElement('div');
   commandPreview.id = 'clicy-preview';
   commandPreview.style.cssText = `
     padding: 8px 16px;
@@ -387,7 +397,7 @@ Cypress.on('test:before:run', () => {
   commandPreview.textContent = 'Preview: cy.';
 
   // Add a label for the preview
-  const previewLabel = window.top.document.createElement('span');
+  const previewLabel = getTopWindow().document.createElement('span');
   previewLabel.style.cssText = `
     color: rgba(255, 255, 255, 0.5);
     margin-right: 8px;
@@ -395,7 +405,7 @@ Cypress.on('test:before:run', () => {
   previewLabel.textContent = 'Preview: ';
 
   // Add the actual preview content
-  const previewContent = window.top.document.createElement('span');
+  const previewContent = getTopWindow().document.createElement('span');
   previewContent.style.cssText = `
     color: #4a88ff;
   `;
@@ -420,7 +430,7 @@ Cypress.on('test:before:run', () => {
   });
 
   // Create the autocomplete dropdown
-  const autocompleteDropdown = window.top.document.createElement('div');
+  const autocompleteDropdown = getTopWindow().document.createElement('div');
   autocompleteDropdown.id = 'clicy-autocomplete';
   autocompleteDropdown.style.cssText = `
     position: fixed; /* Fixed position relative to the viewport instead of absolute */
@@ -443,7 +453,7 @@ Cypress.on('test:before:run', () => {
 
   // Populate the dropdown with available commands
   availableCommands.forEach(cmd => {
-    const item = window.top.document.createElement('div');
+    const item = getTopWindow().document.createElement('div');
     item.className = 'autocomplete-item';
     item.style.cssText = `
       padding: 12px;
@@ -458,7 +468,7 @@ Cypress.on('test:before:run', () => {
       overflow: hidden; /* Hide overflow content to avoid nested scrolling */
     `;
 
-    const commandText = window.top.document.createElement('div');
+    const commandText = getTopWindow().document.createElement('div');
     commandText.style.cssText = `
       font-weight: 600;
       margin-bottom: 6px;
@@ -469,7 +479,7 @@ Cypress.on('test:before:run', () => {
     `;
     commandText.textContent = cmd.command;
 
-    const descriptionText = window.top.document.createElement('div');
+    const descriptionText = getTopWindow().document.createElement('div');
     descriptionText.style.cssText = `
       font-size: 13px;
       color: rgba(255, 255, 255, 0.7);
@@ -508,7 +518,7 @@ Cypress.on('test:before:run', () => {
       activeCommandMode = null;
 
       // If it's just the command with empty parentheses, position cursor inside
-      if (cmd.command === 'goto()' || cmd.command === 'click()' || cmd.command === 'closeBrowser()' || 
+      if (cmd.command === 'goto()' || cmd.command === 'click()' || cmd.command === 'closeBrowser()' ||
           cmd.command === 'get()' || cmd.command === 'contains()') {
         const baseCommand = cmd.command.slice(0, -2); // Remove the "()"
         commandInput.value = baseCommand + "()";
@@ -518,7 +528,7 @@ Cypress.on('test:before:run', () => {
         // Position cursor inside the parentheses
         const cursorPos = baseCommand.length + 1;
         commandInput.setSelectionRange(cursorPos, cursorPos);
-      } 
+      }
       // For write() which has two parameters, position after first quote
       else if (cmd.command === 'write()') {
         commandInput.value = "write(\"\", \"\")";
@@ -850,7 +860,7 @@ Cypress.on('test:before:run', () => {
     // Update status message
     statusMessage.innerHTML = '';
     const iconSpan = window.top.document.createElement('span');
-    iconSpan.innerHTML = useSmartSelectors 
+    iconSpan.innerHTML = useSmartSelectors
       ? '<svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="#4CAF50" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M22 11.08V12a10 10 0 1 1-5.93-9.14"></path><polyline points="22 4 12 14.01 9 11.01"></polyline></svg>'
       : '<svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="#ff9800" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"></circle><line x1="12" y1="8" x2="12" y2="12"></line><line x1="12" y1="16" x2="12.01" y2="16"></line></svg>';
     iconSpan.style.cssText = `
@@ -859,7 +869,7 @@ Cypress.on('test:before:run', () => {
     `;
 
     const textSpan = window.top.document.createElement('span');
-    textSpan.textContent = useSmartSelectors 
+    textSpan.textContent = useSmartSelectors
       ? 'Smart Selectors enabled. Using @testing-library/dom for better selector suggestions.'
       : 'Smart Selectors disabled. Using basic CSS selectors.';
     textSpan.style.cssText = `
@@ -1179,7 +1189,7 @@ Cypress.on('test:before:run', () => {
           vertical-align: middle;
         }
       `;
-      window.top.document.head.appendChild(style);
+      getTopWindow().document.head.appendChild(style);
 
       statusMessage.appendChild(iconSpan);
       statusMessage.appendChild(textSpan);
@@ -1464,9 +1474,9 @@ Cypress.on('test:before:run', () => {
     // Filter out hidden elements and those with display:none or visibility:hidden
     return elements.filter(el => {
       const style = window.getComputedStyle(el);
-      return style.display !== 'none' && 
-             style.visibility !== 'hidden' && 
-             el.offsetWidth > 0 && 
+      return style.display !== 'none' &&
+             style.visibility !== 'hidden' &&
+             el.offsetWidth > 0 &&
              el.offsetHeight > 0;
     });
   };
@@ -1530,7 +1540,7 @@ Cypress.on('test:before:run', () => {
 
       if (focusableElements.length > 0) {
         // Calculate the next index, wrapping around if necessary
-        const nextIndex = event.shiftKey 
+        const nextIndex = event.shiftKey
           ? (currentFocusIndex <= 0 ? focusableElements.length - 1 : currentFocusIndex - 1)
           : (currentFocusIndex >= focusableElements.length - 1 ? 0 : currentFocusIndex + 1);
 
@@ -1799,7 +1809,7 @@ Cypress.on('test:before:run', () => {
   const fetchWithTimeout = (url, options, timeout = 10000) => {
     return Promise.race([
       fetch(url, options),
-      new Promise((_, reject) => 
+      new Promise((_, reject) =>
         setTimeout(() => reject(new Error('Request timed out')), timeout)
       )
     ]);
@@ -2030,7 +2040,7 @@ Cypress.on('test:before:run', () => {
     })
       .then(response => {
         console.log(`[CLICY DEBUG] Server response status: ${response.status}`);
-        return response.json();
+        return (response as Response).json();
       })
       .then(data => {
         console.log(`[CLICY DEBUG] Server response data:`, data);
@@ -2098,7 +2108,7 @@ Cypress.on('test:before:run', () => {
         `;
 
         const textSpan = window.top.document.createElement('span');
-        textSpan.textContent = `Error: ${error.message}. Waiting for server to respond...`;
+        textSpan.textContent = `Error: ${(error as Error).message}. Waiting for server to respond...`;
         textSpan.style.cssText = `
           vertical-align: middle;
         `;
@@ -2286,7 +2296,7 @@ Cypress.on('test:before:run', () => {
         'Content-Type': 'application/json',
       },
     })
-      .then(response => response.json())
+      .then(response => (response as Response).json())
       .then(data => {
         if (data.success) {
           // Create success message with icon
@@ -2351,7 +2361,7 @@ Cypress.on('test:before:run', () => {
         `;
 
         const textSpan = window.top.document.createElement('span');
-        textSpan.textContent = `Error: ${error.message}. Waiting for server to respond...`;
+        textSpan.textContent = `Error: ${(error as Error).message}. Waiting for server to respond...`;
         textSpan.style.cssText = `
           vertical-align: middle;
         `;
@@ -2526,7 +2536,7 @@ Cypress.on('test:before:run', () => {
   });
 
   resetButton.addEventListener('click', () => {
-    if (window.top.confirm('Are you sure you want to reset all commands?')) {
+    if (getTopWindow().confirm('Are you sure you want to reset all commands?')) {
       statusMessage.textContent = 'Resetting commands...';
       statusMessage.style.borderLeftColor = '#2196F3';
       statusMessage.style.backgroundColor = 'rgba(33, 150, 243, 0.1)';
@@ -2540,7 +2550,7 @@ Cypress.on('test:before:run', () => {
           'Content-Type': 'application/json',
         },
       })
-        .then(response => response.json())
+        .then(response => (response as Response).json())
         .then(data => {
           if (data.success) {
             // Create success message with icon
@@ -2605,7 +2615,7 @@ Cypress.on('test:before:run', () => {
           `;
 
           const textSpan = window.top.document.createElement('span');
-          textSpan.textContent = `Error: ${error.message}. Waiting for server to respond...`;
+          textSpan.textContent = `Error: ${(error as Error).message}. Waiting for server to respond...`;
           textSpan.style.cssText = `
             vertical-align: middle;
           `;
@@ -2743,7 +2753,7 @@ Cypress.on('test:before:run', () => {
               `;
 
               const errorTextSpan = window.top.document.createElement('span');
-              errorTextSpan.textContent = `Error starting server: ${err.message}. Please run "npm run clicy:server" in a terminal, or use "npm run clicy:start" to start both server and Cypress.`;
+              errorTextSpan.textContent = `Error starting server: ${(err as Error).message}. Please run "npm run clicy:server" in a terminal, or use "npm run clicy:start" to start both server and Cypress.`;
               errorTextSpan.style.cssText = `
                 vertical-align: middle;
               `;
@@ -2759,7 +2769,7 @@ Cypress.on('test:before:run', () => {
           statusMessage.appendChild(startServerButton);
 
           // Add a link to the documentation
-          const docLink = window.top.document.createElement('a');
+          const docLink = getTopWindow().document.createElement('a');
           docLink.href = 'https://github.com/yourusername/clicy#troubleshooting';
           docLink.target = '_blank';
           docLink.textContent = 'View troubleshooting guide';
@@ -2930,7 +2940,7 @@ Cypress.on('test:before:run', () => {
   });
 
   // Hide dropdown when clicking outside
-  window.top.document.addEventListener('click', (event) => {
+  getTopWindow().document.addEventListener('click', (event) => {
     if (!inputContainer.contains(event.target as Node)) {
       autocompleteDropdown.style.display = 'none';
     }
@@ -2971,6 +2981,6 @@ Cypress.on('test:before:run', () => {
   replContainer.appendChild(contentContainer);
 
   // Add the UI to the Cypress Test Runner
-  window.top.document.body.appendChild(replContainer);
+  getTopWindow().document.body.appendChild(replContainer);
   console.log('[CLICY DEBUG] UI added to DOM');
 });

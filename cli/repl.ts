@@ -63,7 +63,7 @@ const clicyRepl = repl.start({
 
     if (promptState.isPrompting) {
       const url = trimmed.replace(/['"]/g, '');
-      const gotoCmd = goto(url);
+      const gotoCmd = dslCommands.goto(url);
 
       if (gotoCmd) {
         commandHistory.push(gotoCmd);

@@ -1,6 +1,6 @@
 // cypress.config.ts
 import { defineConfig } from 'cypress';
-import { spawn } from 'child_process';
+import { spawn, ChildProcess } from 'child_process';
 import { existsSync } from 'fs';
 import { join } from 'path';
 
@@ -8,7 +8,7 @@ export default defineConfig({
   e2e: {
     setupNodeEvents(on, config) {
       // Start the server automatically when Cypress starts
-      let serverProcess;
+      let serverProcess: ChildProcess;
 
       on('before:browser:launch', (browser, launchOptions) => {
         // Set environment variable to hide server startup message
@@ -50,15 +50,14 @@ export default defineConfig({
         });
 
         // Give the server a moment to start up
-        return new Promise((resolve) => {
-          setTimeout(() => {
-            // Only log if not in quiet mode
-            if (process.env.CLICY_QUIET !== 'true') {
-              console.log('Clicy server started successfully');
-            }
-            resolve(launchOptions);
-          }, 2000);
-        });
+        setTimeout(() => {
+          // Only log if not in quiet mode
+          if (process.env.CLICY_QUIET !== 'true') {
+            console.log('Clicy server started successfully');
+          }
+        }, 2000);
+
+        return launchOptions;
       });
 
       // Clean up the server process when Cypress exits
@@ -70,12 +69,16 @@ export default defineConfig({
           }
           // Kill the process and all its children
           if (process.platform === 'win32') {
-            spawn('taskkill', ['/pid', serverProcess.pid, '/f', '/t'], {
-              stdio: 'ignore',
-              windowsHide: true
-            });
+            if (serverProcess.pid) {
+              spawn('taskkill', ['/pid', serverProcess.pid.toString(), '/f', '/t'], {
+                stdio: 'ignore',
+                windowsHide: true
+              });
+            }
           } else {
-            process.kill(-serverProcess.pid);
+            if (serverProcess.pid) {
+              process.kill(-serverProcess.pid);
+            }
           }
         }
       });
