@@ -1,4 +1,4 @@
-# CliCy – Cypress REPL for Fast Command Authoring 🧠💻
+# CliCy – Cypress REPL for Fast Command Authoring
 
 [![GitHub Repository](https://img.shields.io/badge/GitHub-Repository-blue.svg)](https://github.com/lasithdilshan20/clicy)
 [![Author](https://img.shields.io/badge/Author-Lasitha%20W.-orange.svg)](https://github.com/lasithdilshan20)
@@ -11,7 +11,7 @@
 
 ---
 
-## 🔧 Installation
+## Installation
 
 ```bash
 # Local install (recommended for CI and project use)
@@ -23,7 +23,7 @@ npm install -g clicy
 
 ---
 
-## 🚀 Getting Started
+## Getting Started
 
 ### CLI Mode
 
@@ -97,17 +97,17 @@ export default defineConfig({
 
 ---
 
-## ✨ Features
+## Features
 
-- 🧪 Real-time Cypress command execution
-- 🧠 Smart DSL like `goto()`, `click()`, `write()` etc.
-- 📤 Export generated commands to `.cy.ts`
-- 🖥️ In-browser REPL panel with preview
-- 🔁 Integrated with Cypress auto-run
+- Real-time Cypress command execution
+- Smart DSL like `goto()`, `click()`, `write()` etc.
+- Export generated commands to `.cy.ts`
+- In-browser REPL panel with preview
+- Integrated with Cypress auto-run
 
 ---
 
-## 🧬 Supported DSL Commands
+## Supported DSL Commands
 
 ### Navigation
 - `goto(url)`
@@ -140,7 +140,7 @@ export default defineConfig({
 
 ---
 
-## 🧑‍💻 Developer Commands
+## Developer Commands
 
 ```bash
 # Dev mode
@@ -152,7 +152,7 @@ npm run cypress:open
 
 ---
 
-## 📝 Export Shortcuts (from REPL)
+## Export Shortcuts (from REPL)
 
 - `.code` – Export to Cypress spec
 - `.reset` – Clear REPL state
@@ -160,7 +160,7 @@ npm run cypress:open
 
 ---
 
-## ⚠️ Troubleshooting
+## Troubleshooting
 
 ### UI Panel not loading?
 
@@ -170,13 +170,13 @@ npm run cypress:open
 
 ---
 
-## 📁 File Locations
+## File Locations
 
 - **Generated spec file**: `cypress/e2e/live.cy.ts` (TypeScript) or `cypress/e2e/live.cy.js` (JavaScript)
 - **DSL Config**: `src/dsl.ts`
 - **Custom selector logic**: `src/selectors.ts`
 
-## 🔄 JavaScript & TypeScript Compatibility
+## JavaScript & TypeScript Compatibility
 
 CliCy automatically detects whether your project is using TypeScript or JavaScript:
 
@@ -190,7 +190,7 @@ The detection is based on:
 
 ---
 
-## 🧪 Requirements
+## Requirements
 
 - **Node.js** ≥ 18.x
 - **Cypress** ≥ 13.x
@@ -198,13 +198,13 @@ The detection is based on:
 
 ---
 
-## 📄 License
+## License
 
 [MIT](https://opensource.org/licenses/MIT) – by [Lasitha Wijenayake](https://github.com/lasithdilshan20)
 
 ---
 
-## 🙌 Contributions Welcome
+## Contributions Welcome
 
-Star ⭐, fork 🍴, or contribute a PR 🛠️ at  
-👉 https://github.com/lasithdilshan20/clicy
+Star, fork 🍴, or contribute a PR 🛠️ at  
+https://github.com/lasithdilshan20/clicy

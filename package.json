@@ -1,6 +1,6 @@
 {
   "name": "clicy",
-  "version": "0.0.2",
+  "version": "0.1.0",
   "description": "Cypress-based CLI automation tool with REPL",
   "main": "dist/cli/repl.js",
   "bin": {
@@ -9,11 +9,11 @@
   "types": "types/cypress.d.ts",
   "repository": {
     "type": "git",
-    "url": "https://github.com/yourusername/clicy.git"
+    "url": "https://github.com/lasithdilshan20/clicy.git"
   },
-  "homepage": "https://github.com/yourusername/clicy",
+  "homepage": "https://github.com/lasithdilshan20/clicy",
   "bugs": {
-    "url": "https://github.com/yourusername/clicy/issues"
+    "url": "https://github.com/lasithdilshan20/clicy/issues"
   },
   "files": [
     "dist",
@@ -44,7 +44,7 @@
     "testing",
     "repl"
   ],
-  "author": "Your Name <your.email@example.com>",
+  "author": "Your Name <lasithdilshan20@gmail.com>",
   "license": "MIT",
   "engines": {
     "node": ">=14.0.0"
