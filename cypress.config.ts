@@ -23,7 +23,7 @@ export default defineConfig({
       // Set the support file to clicy's support file if not already overridden
       if (!config.e2e?.supportFile) {
         config.e2e = config.e2e || {};
-        config.e2e.supportFile = 'node_modules/clicy/dist/support/e2e.js';
+        config.e2e.supportFile = 'cypress/support/e2e.ts';
       }
 
       // Log a message when CliCy starts
