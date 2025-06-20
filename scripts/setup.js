@@ -13,7 +13,7 @@ function isTypeScriptProject(projectRoot) {
   if (fs.existsSync(path.join(projectRoot, 'tsconfig.json'))) {
     return true;
   }
-  
+
   // Check for typescript dependency in package.json
   try {
     const packageJsonPath = path.join(projectRoot, 'package.json');
@@ -29,7 +29,7 @@ function isTypeScriptProject(projectRoot) {
   } catch (error) {
     console.error('Error checking package.json:', error);
   }
-  
+
   return false;
 }
 
@@ -42,18 +42,20 @@ function isTypeScriptProject(projectRoot) {
 function generateLiveSpec(projectRoot, force = false) {
   // TypeScript template for live.cy.ts
   const tsTemplate = `
-describe('Live Test', () => {
-  it('runs REPL steps', () => {
-    // Commands will be injected here by CliCy
+describe('Live CLI Commands', () => {
+  it('executes REPL steps', () => {
+    cy.visit('/');
+    // Commands will be dynamically injected by CliCy
   });
 });
 `;
 
   // JavaScript template for live.cy.js
   const jsTemplate = `
-describe('Live Test', () => {
-  it('runs REPL steps', () => {
-    // Commands will be injected here by CliCy
+describe('Live CLI Commands', () => {
+  it('executes REPL steps', () => {
+    cy.visit('/');
+    // Commands will be dynamically injected by CliCy
   });
 });
 `;
@@ -61,7 +63,7 @@ describe('Live Test', () => {
   const isTS = isTypeScriptProject(projectRoot);
   const fileName = isTS ? 'live.cy.ts' : 'live.cy.js';
   const template = isTS ? tsTemplate : jsTemplate;
-  
+
   // Ensure the cypress/e2e directory exists
   const cypressE2eDir = path.join(projectRoot, 'cypress', 'e2e');
   if (!fs.existsSync(cypressE2eDir)) {
@@ -72,15 +74,15 @@ describe('Live Test', () => {
       return null;
     }
   }
-  
+
   const filePath = path.join(cypressE2eDir, fileName);
-  
+
   // Check if file already exists and force is not enabled
   if (fs.existsSync(filePath) && !force) {
     console.log(`CliCy: Live spec file already exists at ${filePath}`);
     return filePath;
   }
-  
+
   try {
     // Write the template to the file
     fs.writeFileSync(filePath, template);
@@ -95,24 +97,38 @@ describe('Live Test', () => {
 // Main function
 function main() {
   console.log('CliCy: Setting up...');
-  
+
   try {
     // Determine the project root
     // When running as a postinstall script, we need to go up to the parent directory
     // if we're installed as a dependency
     let projectRoot = process.cwd();
-    
+
     // Check if we're in a node_modules directory
     if (projectRoot.includes('node_modules')) {
       // Go up to the project root (2 levels up from node_modules/clicy)
       projectRoot = path.resolve(projectRoot, '..', '..');
     }
-    
+
     console.log(`CliCy: Project root detected as ${projectRoot}`);
-    
+
     // Generate the live spec file
     generateLiveSpec(projectRoot);
-    
+
+    // Check if we need to update the Cypress config file
+    const configPath = path.join(projectRoot, 'cypress.config.js');
+    const tsConfigPath = path.join(projectRoot, 'cypress.config.ts');
+
+    if (fs.existsSync(tsConfigPath)) {
+      console.log(`CliCy: Found Cypress TypeScript config at ${tsConfigPath}`);
+      console.log(`CliCy: To enable the REPL, add 'clicyCommand: true' to your e2e configuration.`);
+    } else if (fs.existsSync(configPath)) {
+      console.log(`CliCy: Found Cypress JavaScript config at ${configPath}`);
+      console.log(`CliCy: To enable the REPL, add 'clicyCommand: true' to your e2e configuration.`);
+    } else {
+      console.log(`CliCy: No Cypress config file found. Please create one and add 'clicyCommand: true' to enable the REPL.`);
+    }
+
     console.log('CliCy: Setup completed successfully');
   } catch (error) {
     console.error('CliCy: Setup failed:', error);

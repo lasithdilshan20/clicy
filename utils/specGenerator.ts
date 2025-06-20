@@ -3,18 +3,20 @@ import path from 'path';
 
 // TypeScript template for live.cy.ts
 const tsTemplate = `
-describe('Live Test', () => {
-  it('runs REPL steps', () => {
-    // Commands will be injected here by CliCy
+describe('Live CLI Commands', () => {
+  it('executes REPL steps', () => {
+    cy.visit('/');
+    // Commands will be dynamically injected by CliCy
   });
 });
 `;
 
 // JavaScript template for live.cy.js
 const jsTemplate = `
-describe('Live Test', () => {
-  it('runs REPL steps', () => {
-    // Commands will be injected here by CliCy
+describe('Live CLI Commands', () => {
+  it('executes REPL steps', () => {
+    cy.visit('/');
+    // Commands will be dynamically injected by CliCy
   });
 });
 `;
@@ -29,7 +31,7 @@ export function isTypeScriptProject(projectRoot: string): boolean {
   if (fs.existsSync(path.join(projectRoot, 'tsconfig.json'))) {
     return true;
   }
-  
+
   // Check for typescript dependency in package.json
   try {
     const packageJsonPath = path.join(projectRoot, 'package.json');
@@ -43,7 +45,7 @@ export function isTypeScriptProject(projectRoot: string): boolean {
   } catch (error) {
     console.error('Error checking package.json:', error);
   }
-  
+
   // Check if there are any .ts files in the cypress directory
   try {
     const cypressDir = path.join(projectRoot, 'cypress');
@@ -56,7 +58,7 @@ export function isTypeScriptProject(projectRoot: string): boolean {
   } catch (error) {
     console.error('Error checking cypress directory:', error);
   }
-  
+
   return false;
 }
 
@@ -67,11 +69,11 @@ export function isTypeScriptProject(projectRoot: string): boolean {
  */
 function findTypeScriptFiles(dir: string): boolean {
   const files = fs.readdirSync(dir);
-  
+
   for (const file of files) {
     const filePath = path.join(dir, file);
     const stat = fs.statSync(filePath);
-    
+
     if (stat.isDirectory()) {
       const found = findTypeScriptFiles(filePath);
       if (found) return true;
@@ -79,7 +81,7 @@ function findTypeScriptFiles(dir: string): boolean {
       return true;
     }
   }
-  
+
   return false;
 }
 
@@ -93,22 +95,22 @@ export function generateLiveSpec(projectRoot: string, force: boolean = false): s
   const isTS = isTypeScriptProject(projectRoot);
   const fileName = isTS ? 'live.cy.ts' : 'live.cy.js';
   const template = isTS ? tsTemplate : jsTemplate;
-  
+
   // Ensure the cypress/e2e directory exists
   const cypressE2eDir = path.join(projectRoot, 'cypress', 'e2e');
   if (!fs.existsSync(cypressE2eDir)) {
     fs.mkdirSync(cypressE2eDir, { recursive: true });
   }
-  
+
   const filePath = path.join(cypressE2eDir, fileName);
-  
+
   // Check if file already exists and force is not enabled
   if (fs.existsSync(filePath) && !force) {
     return filePath;
   }
-  
+
   // Write the template to the file
   fs.writeFileSync(filePath, template);
-  
+
   return filePath;
 }

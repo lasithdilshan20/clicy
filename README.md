@@ -66,7 +66,7 @@ The CliCy REPL will automatically activate and the live spec will be available i
 You can enable or disable CliCy in your Cypress configuration:
 
 ```javascript
-// cypress.config.js or cypress.config.ts
+// cypress.config.js
 module.exports = {
   e2e: {
     setupNodeEvents(on, config) {
@@ -76,6 +76,23 @@ module.exports = {
     clicyCommand: true,
   },
 }
+```
+
+For TypeScript projects, the type definitions are included:
+
+```typescript
+// cypress.config.ts
+import { defineConfig } from 'cypress';
+
+export default defineConfig({
+  e2e: {
+    setupNodeEvents(on, config) {
+      // Your existing setup...
+    },
+    // Enable or disable CliCy (default is true)
+    clicyCommand: true, // TypeScript type definitions included
+  },
+});
 ```
 
 ---

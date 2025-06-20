@@ -20,6 +20,19 @@ export default defineConfig({
       const projectRoot = process.cwd();
       generateLiveSpec(projectRoot);
 
+      // Set the support file to clicy's support file if not already overridden
+      if (!config.e2e?.supportFile) {
+        config.e2e = config.e2e || {};
+        config.e2e.supportFile = 'node_modules/clicy/dist/support/e2e.js';
+      }
+
+      // Log a message when CliCy starts
+      console.log("[CliCy] REPL enabled. Open 'live.cy.ts' to begin scripting interactively.");
+
+      // Optional: Inject a Cypress banner when clicyCommand is true
+      // This is done by adding a custom command in the support file
+      // The actual banner will be injected by the support file
+
       // Start the server automatically when Cypress starts
       let serverProcess: ChildProcess;
 
@@ -95,9 +108,11 @@ export default defineConfig({
           }
         }
       });
+
+      // Return the updated config
+      return config;
     },
     specPattern: 'cypress/e2e/**/*.cy.{js,ts}',
-    supportFile: 'support/e2e.ts',
     baseUrl: 'https://www.google.com',
   },
   video: false,

@@ -6,6 +6,7 @@
   "bin": {
     "clicy": "dist/bin/clicy.js"
   },
+  "types": "types/cypress.d.ts",
   "repository": {
     "type": "git",
     "url": "https://github.com/yourusername/clicy.git"
@@ -20,7 +21,8 @@
     "cli",
     "commands",
     "utils",
-    "scripts"
+    "scripts",
+    "types"
   ],
   "scripts": {
     "build": "tsc",
