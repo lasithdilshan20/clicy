@@ -1,6 +1,7 @@
 {
   "commands": [
-    "cy",
-    "cy.visit(\"https://www.amazon.com\")"
+    "cy.visit(\"https://www.trackman.com\")",
+    "cy.get(\"#show_details\").click()",
+    "cy.get(\"#hide_details\").click()"
   ]
 }

@@ -19,7 +19,8 @@
     "bin",
     "cli",
     "commands",
-    "utils"
+    "utils",
+    "scripts"
   ],
   "scripts": {
     "build": "tsc",
@@ -31,7 +32,8 @@
     "clicy:test": "cypress open --e2e --browser chrome",
     "clicy:start": "ts-node start.ts",
     "test": "jest",
-    "test:watch": "jest --watch"
+    "test:watch": "jest --watch",
+    "postinstall": "node scripts/setup.js"
   },
   "keywords": [
     "cypress",

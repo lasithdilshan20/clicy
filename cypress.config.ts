@@ -3,10 +3,23 @@ import { defineConfig } from 'cypress';
 import { spawn, ChildProcess } from 'child_process';
 import { existsSync } from 'fs';
 import { join } from 'path';
+import { generateLiveSpec } from './utils/specGenerator';
 
 export default defineConfig({
   e2e: {
     setupNodeEvents(on, config) {
+      // Check if clicyCommand is enabled (default to true if not specified)
+      const clicyEnabled = config.e2e?.clicyCommand !== false;
+
+      // If clicyCommand is disabled, skip CliCy initialization
+      if (!clicyEnabled) {
+        return config;
+      }
+
+      // Generate the live spec file based on project type
+      const projectRoot = process.cwd();
+      generateLiveSpec(projectRoot);
+
       // Start the server automatically when Cypress starts
       let serverProcess: ChildProcess;
 

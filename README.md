@@ -37,6 +37,18 @@ clicy
 
 ### Cypress Test Runner UI (Live Panel)
 
+#### Automatic Mode (Recommended)
+
+Simply run Cypress as usual:
+
+```bash
+npx cypress open
+```
+
+The CliCy REPL will automatically activate and the live spec will be available in the Cypress Test Runner.
+
+#### Manual Mode
+
 1. Start the server:
    ```bash
    npm run clicy:server
@@ -48,6 +60,23 @@ clicy
    ```
 
 3. Open `live.cy.ts` test – the CliCy UI panel will appear at the bottom.
+
+### Configuration
+
+You can enable or disable CliCy in your Cypress configuration:
+
+```javascript
+// cypress.config.js or cypress.config.ts
+module.exports = {
+  e2e: {
+    setupNodeEvents(on, config) {
+      // Your existing setup...
+    },
+    // Enable or disable CliCy (default is true)
+    clicyCommand: true,
+  },
+}
+```
 
 ---
 
@@ -126,9 +155,21 @@ npm run cypress:open
 
 ## 📁 File Locations
 
-- **Generated spec file**: `cypress/e2e/live.cy.ts`
+- **Generated spec file**: `cypress/e2e/live.cy.ts` (TypeScript) or `cypress/e2e/live.cy.js` (JavaScript)
 - **DSL Config**: `src/dsl.ts`
 - **Custom selector logic**: `src/selectors.ts`
+
+## 🔄 JavaScript & TypeScript Compatibility
+
+CliCy automatically detects whether your project is using TypeScript or JavaScript:
+
+- For TypeScript projects, it generates a `live.cy.ts` file
+- For JavaScript projects, it generates a `live.cy.js` file
+
+The detection is based on:
+1. Presence of `tsconfig.json`
+2. TypeScript dependency in `package.json`
+3. Existence of `.ts` files in the Cypress directory
 
 ---
 
