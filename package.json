@@ -1,6 +1,6 @@
 {
   "name": "clicy",
-  "version": "0.1.1",
+  "version": "0.1.2",
   "description": "Cypress-based CLI automation tool with REPL",
   "main": "dist/cli/repl.js",
   "bin": {
@@ -22,7 +22,8 @@
     "commands",
     "utils",
     "scripts",
-    "types"
+    "types",
+    "cypress"
   ],
   "scripts": {
     "build": "tsc",

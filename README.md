@@ -67,6 +67,9 @@ You can enable or disable CliCy in your Cypress configuration:
 
 ```javascript
 // cypress.config.js
+// Import the CliCy support file
+require('./cypress/support/e2e.ts');
+
 module.exports = {
   e2e: {
     setupNodeEvents(on, config) {
@@ -83,6 +86,8 @@ For TypeScript projects, the type definitions are included:
 ```typescript
 // cypress.config.ts
 import { defineConfig } from 'cypress';
+// Import the CliCy support file
+import './cypress/support/e2e.ts';
 
 export default defineConfig({
   e2e: {
@@ -167,6 +172,17 @@ npm run cypress:open
 - Ensure server is running on port `4000`:  
   `npm run clicy:server`
 - Check browser dev tools for CORS or port conflicts
+- Make sure you've imported the support file in your Cypress configuration:
+  ```typescript
+  // For TypeScript projects
+  import './cypress/support/e2e.ts';
+  ```
+  ```javascript
+  // For JavaScript projects
+  require('./cypress/support/e2e.ts');
+  ```
+- Verify that `clicyCommand: true` is set in your Cypress configuration
+- If using Clicy as a plugin in a separate project, make sure you've run `npm install --save-dev clicy` to install it properly
 
 ---
 

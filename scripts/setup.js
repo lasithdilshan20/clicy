@@ -34,6 +34,55 @@ function isTypeScriptProject(projectRoot) {
 }
 
 /**
+ * Copies the support file to the user's project
+ * @param {string} projectRoot The root directory of the project
+ * @param {boolean} force Whether to overwrite an existing file
+ * @returns {string} The path to the copied file
+ */
+function copySupportFile(projectRoot, force = false) {
+  const isTS = isTypeScriptProject(projectRoot);
+
+  // Ensure the cypress/support directory exists
+  const cypressSupportDir = path.join(projectRoot, 'cypress', 'support');
+  if (!fs.existsSync(cypressSupportDir)) {
+    try {
+      fs.mkdirSync(cypressSupportDir, { recursive: true });
+    } catch (error) {
+      console.error(`Error creating directory ${cypressSupportDir}:`, error);
+      return null;
+    }
+  }
+
+  // Path to the support file in the user's project
+  const targetFilePath = path.join(cypressSupportDir, 'e2e.ts');
+
+  // Check if file already exists and force is not enabled
+  if (fs.existsSync(targetFilePath) && !force) {
+    console.log(`CliCy: Support file already exists at ${targetFilePath}`);
+    return targetFilePath;
+  }
+
+  // Path to the support file in the package
+  const sourceFilePath = path.join(__dirname, '..', 'cypress', 'support', 'e2e.ts');
+
+  try {
+    // Check if the source file exists
+    if (!fs.existsSync(sourceFilePath)) {
+      console.error(`CliCy: Support file not found at ${sourceFilePath}`);
+      return null;
+    }
+
+    // Copy the file
+    fs.copyFileSync(sourceFilePath, targetFilePath);
+    console.log(`CliCy: Copied support file to ${targetFilePath}`);
+    return targetFilePath;
+  } catch (error) {
+    console.error(`Error copying support file to ${targetFilePath}:`, error);
+    return null;
+  }
+}
+
+/**
  * Generates the appropriate live spec file based on project type
  * @param {string} projectRoot The root directory of the project
  * @param {boolean} force Whether to overwrite an existing file
@@ -115,6 +164,9 @@ function main() {
     // Generate the live spec file
     generateLiveSpec(projectRoot);
 
+    // Copy the support file
+    copySupportFile(projectRoot);
+
     // Check if we need to update the Cypress config file
     const configPath = path.join(projectRoot, 'cypress.config.js');
     const tsConfigPath = path.join(projectRoot, 'cypress.config.ts');
@@ -122,11 +174,16 @@ function main() {
     if (fs.existsSync(tsConfigPath)) {
       console.log(`CliCy: Found Cypress TypeScript config at ${tsConfigPath}`);
       console.log(`CliCy: To enable the REPL, add 'clicyCommand: true' to your e2e configuration.`);
+      console.log(`CliCy: Make sure to import the support file in your Cypress configuration:`);
+      console.log(`CliCy: import './cypress/support/e2e.ts';`);
     } else if (fs.existsSync(configPath)) {
       console.log(`CliCy: Found Cypress JavaScript config at ${configPath}`);
       console.log(`CliCy: To enable the REPL, add 'clicyCommand: true' to your e2e configuration.`);
+      console.log(`CliCy: Make sure to import the support file in your Cypress configuration:`);
+      console.log(`CliCy: require('./cypress/support/e2e.ts');`);
     } else {
       console.log(`CliCy: No Cypress config file found. Please create one and add 'clicyCommand: true' to enable the REPL.`);
+      console.log(`CliCy: Make sure to import the support file in your Cypress configuration.`);
     }
 
     console.log('CliCy: Setup completed successfully');
