@@ -37,13 +37,22 @@ npm install -g clicy
    // cypress.config.js
    module.exports = {
      e2e: {
+       setupNodeEvents(on, config) {
+         return require('clicy/plugin').setupNodeEvents(on, config);
+       },
        // Enable CliCy
        clicyCommand: true,
      },
    }
    ```
 
-3. Run Cypress:
+3. Import CliCy in your Cypress support file:
+   ```javascript
+   // cypress/support/e2e.js or cypress/support/e2e.ts
+   import 'clicy/support';
+   ```
+
+4. Run Cypress:
    ```bash
    npx cypress open
    ```

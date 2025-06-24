@@ -13,5 +13,5 @@
     "types": ["jest", "node"]
   },
   "include": ["**/*.ts"],
-  "exclude": ["node_modules", "dist", "cypress", "tests"]
+  "exclude": ["node_modules", "dist", "tests"]
 }
