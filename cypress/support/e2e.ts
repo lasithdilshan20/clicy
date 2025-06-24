@@ -229,7 +229,7 @@ Cypress.on('test:before:run', () => {
   // Check if we have a saved collapsed state
   const isCollapsed = getTopWindow().localStorage.getItem('clicy-collapsed') === 'true';
 
-  // Create the REPL UI container
+  // Create the REPL UI container with futuristic styling
   const replContainer = getTopWindow().document.createElement('div');
   replContainer.id = 'clicy-repl';
   replContainer.style.cssText = `
@@ -237,86 +237,161 @@ Cypress.on('test:before:run', () => {
     bottom: 0;
     left: 0;
     right: 0;
-    background: linear-gradient(to bottom, #2c3e50, #1a2530);
-    border-top: 1px solid #4a6b8a;
+    background: linear-gradient(135deg, #1e3c72, #2a5298, #1a2530);
+    border-top: 1px solid rgba(74, 136, 255, 0.4);
     display: flex;
     flex-direction: column;
     z-index: 9999;
-    transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
-    box-shadow: 0 -4px 20px rgba(0, 0, 0, 0.3), 0 -2px 6px rgba(0, 120, 255, 0.1);
+    transition: all 0.4s cubic-bezier(0.4, 0, 0.2, 1);
+    box-shadow: 0 -4px 20px rgba(0, 0, 0, 0.4), 0 -2px 10px rgba(74, 136, 255, 0.2), 0 0 30px rgba(74, 136, 255, 0.1);
     ${isCollapsed ? 'transform: translateY(calc(100% - 40px));' : ''}
-    border-radius: 12px 12px 0 0;
+    border-radius: 16px 16px 0 0;
     overflow: hidden;
-  `;
+    backdrop-filter: blur(5px);
+  `; 
 
-  // Create the header bar
+  // Create the header bar with enhanced futuristic styling
   const headerBar = getTopWindow().document.createElement('div');
   headerBar.style.cssText = `
     display: flex;
     justify-content: space-between;
     align-items: center;
-    padding: 12px 20px;
-    background: linear-gradient(to right, #1e3c72, #2a5298);
-    border-bottom: ${isCollapsed ? 'none' : '1px solid rgba(255, 255, 255, 0.1)'};
+    padding: 14px 24px;
+    background: linear-gradient(135deg, #0f2027, #203a43, #2c5364);
+    border-bottom: ${isCollapsed ? 'none' : '1px solid rgba(74, 136, 255, 0.3)'};
     cursor: pointer;
     user-select: none;
-    transition: all 0.3s ease;
+    transition: all 0.4s cubic-bezier(0.4, 0, 0.2, 1);
+    position: relative;
+    overflow: hidden;
   `;
+  
+  // Add a subtle animated glow effect to the header
+  const headerGlow = getTopWindow().document.createElement('div');
+  headerGlow.style.cssText = `
+    position: absolute;
+    top: 0;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    background: linear-gradient(90deg, transparent, rgba(74, 136, 255, 0.1), transparent);
+    transform: translateX(-100%);
+    animation: header-glow 8s infinite;
+    pointer-events: none;
+  `;
+  
+  // Add the animation keyframes to the document
+  const styleSheet = getTopWindow().document.createElement('style');
+  styleSheet.textContent = `
+    @keyframes header-glow {
+      0% { transform: translateX(-100%); }
+      50% { transform: translateX(100%); }
+      100% { transform: translateX(-100%); }
+    }
+  `;
+  getTopWindow().document.head.appendChild(styleSheet);
+  
+  headerBar.appendChild(headerGlow);
 
-  // Create the title with favicon
+  // Create the title with enhanced favicon
   const titleContainer = getTopWindow().document.createElement('div');
   titleContainer.style.cssText = `
     display: flex;
     align-items: center;
-    gap: 8px;
+    gap: 12px;
   `;
 
-  // Add favicon
+  // Add favicon with glowing effect
+  const faviconContainer = getTopWindow().document.createElement('div');
+  faviconContainer.style.cssText = `
+    position: relative;
+    width: 24px;
+    height: 24px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+  `;
+  
+  const faviconGlow = getTopWindow().document.createElement('div');
+  faviconGlow.style.cssText = `
+    position: absolute;
+    width: 24px;
+    height: 24px;
+    border-radius: 50%;
+    background: rgba(74, 136, 255, 0.5);
+    filter: blur(6px);
+    animation: pulse 2s infinite;
+  `;
+  
   const favicon = getTopWindow().document.createElement('img');
   favicon.src = 'http://localhost:4000/favicon.ico?v=' + new Date().getTime();
   favicon.style.cssText = `
-    width: 16px;
-    height: 16px;
-    border-radius: 3px;
+    width: 20px;
+    height: 20px;
+    border-radius: 50%;
+    position: relative;
+    z-index: 1;
+    box-shadow: 0 0 10px rgba(74, 136, 255, 0.7);
   `;
+  
+  faviconContainer.appendChild(faviconGlow);
+  faviconContainer.appendChild(favicon);
+  
+  // Add pulse animation
+  const pulseStyle = getTopWindow().document.createElement('style');
+  pulseStyle.textContent = `
+    @keyframes pulse {
+      0% { transform: scale(0.95); opacity: 0.7; }
+      50% { transform: scale(1.05); opacity: 0.9; }
+      100% { transform: scale(0.95); opacity: 0.7; }
+    }
+  `;
+  getTopWindow().document.head.appendChild(pulseStyle);
 
   const title = getTopWindow().document.createElement('div');
   title.textContent = 'CliCy Commands';
   title.style.cssText = `
     font-weight: 600;
-    font-size: 14px;
-    color: rgba(255, 255, 255, 0.9);
-    letter-spacing: 0.5px;
-    text-shadow: 0 1px 2px rgba(0, 0, 0, 0.3);
+    font-size: 16px;
+    color: rgba(255, 255, 255, 0.95);
+    letter-spacing: 0.7px;
+    text-shadow: 0 0 10px rgba(74, 136, 255, 0.7), 0 2px 4px rgba(0, 0, 0, 0.5);
+    background: linear-gradient(to right, #ffffff, #88b8ff);
+    -webkit-background-clip: text;
+    -webkit-text-fill-color: transparent;
   `;
 
   titleContainer.appendChild(favicon);
   titleContainer.appendChild(title);
 
-  // Create the toggle button
+  // Create the toggle button with enhanced styling
   const toggleButton = getTopWindow().document.createElement('div');
   toggleButton.innerHTML = isCollapsed ? ICONS.chevronUp : ICONS.chevronDown;
   toggleButton.style.cssText = `
     display: flex;
     align-items: center;
     justify-content: center;
-    width: 24px;
-    height: 24px;
-    color: rgba(255, 255, 255, 0.8);
-    background: rgba(255, 255, 255, 0.1);
+    width: 32px;
+    height: 32px;
+    color: rgba(255, 255, 255, 0.9);
+    background: linear-gradient(135deg, rgba(74, 136, 255, 0.2), rgba(74, 136, 255, 0.4));
     border-radius: 50%;
-    transition: all 0.2s ease;
+    transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+    border: 1px solid rgba(74, 136, 255, 0.3);
+    box-shadow: 0 0 10px rgba(74, 136, 255, 0.2);
   `;
 
-  // Add hover effect to toggle button
+  // Add enhanced hover effect to toggle button
   toggleButton.addEventListener('mouseover', () => {
-    toggleButton.style.background = 'rgba(255, 255, 255, 0.2)';
-    toggleButton.style.boxShadow = '0 0 8px rgba(255, 255, 255, 0.3)';
+    toggleButton.style.background = 'linear-gradient(135deg, rgba(74, 136, 255, 0.4), rgba(74, 136, 255, 0.6))';
+    toggleButton.style.boxShadow = '0 0 15px rgba(74, 136, 255, 0.5)';
+    toggleButton.style.transform = 'scale(1.05)';
   });
 
   toggleButton.addEventListener('mouseout', () => {
-    toggleButton.style.background = 'rgba(255, 255, 255, 0.1)';
-    toggleButton.style.boxShadow = 'none';
+    toggleButton.style.background = 'linear-gradient(135deg, rgba(74, 136, 255, 0.2), rgba(74, 136, 255, 0.4))';
+    toggleButton.style.boxShadow = '0 0 10px rgba(74, 136, 255, 0.2)';
+    toggleButton.style.transform = 'scale(1)';
   });
 
   // Add click event to toggle collapse
@@ -342,57 +417,89 @@ Cypress.on('test:before:run', () => {
   headerBar.appendChild(titleContainer);
   headerBar.appendChild(toggleButton);
 
-  // Create the content container
+  // Create the content container with enhanced styling
   const contentContainer = getTopWindow().document.createElement('div');
   contentContainer.style.cssText = `
-    padding: 16px;
+    padding: 20px;
     display: flex;
     flex-direction: column;
-    background: #1a2530;
+    background: linear-gradient(135deg, #0f2027, #203a43);
+    position: relative;
+    overflow: hidden;
   `;
+  
+  // Add subtle background pattern
+  const patternOverlay = getTopWindow().document.createElement('div');
+  patternOverlay.style.cssText = `
+    position: absolute;
+    top: 0;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    background-image: radial-gradient(rgba(74, 136, 255, 0.1) 1px, transparent 1px);
+    background-size: 20px 20px;
+    pointer-events: none;
+    opacity: 0.3;
+  `;
+  
+  contentContainer.appendChild(patternOverlay);
 
-  // Create the input field
+  // Create the input field with enhanced styling
   const inputContainer = getTopWindow().document.createElement('div');
   inputContainer.style.cssText = `
     display: flex;
     flex-direction: column;
-    margin-bottom: 16px;
+    margin-bottom: 20px;
     position: relative;
+    z-index: 1;
   `;
+  
+  // This will be the container for the input and dropdown to ensure proper positioning
+  const inputAndDropdownContainer = getTopWindow().document.createElement('div');
+  inputAndDropdownContainer.style.cssText = `
+    position: relative;
+    width: 100%;
+  `;
+  
+  inputContainer.appendChild(inputAndDropdownContainer);
 
   const commandInput = getTopWindow().document.createElement('input');
   commandInput.type = 'text';
   commandInput.placeholder = 'Enter Cypress command (e.g., contains("Login").click())';
   commandInput.style.cssText = `
     flex: 1;
-    padding: 12px 16px;
+    padding: 14px 18px;
     font-family: 'Consolas', monospace;
-    font-size: 14px;
+    font-size: 15px;
     color: #e0e0e0;
-    background: rgba(0, 0, 0, 0.2);
-    border: 1px solid rgba(255, 255, 255, 0.1);
-    border-radius: 8px 8px 0 0;
+    background: rgba(0, 0, 0, 0.3);
+    border: 1px solid rgba(74, 136, 255, 0.3);
+    border-radius: 12px 12px 0 0;
     outline: none;
     transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
-    box-shadow: inset 0 1px 3px rgba(0, 0, 0, 0.2);
+    box-shadow: inset 0 2px 4px rgba(0, 0, 0, 0.3), 0 0 10px rgba(74, 136, 255, 0.1);
+    caret-color: #4a88ff;
+    letter-spacing: 0.5px;
+    width: 600px; /* Increased width from default */
   `;
 
-  // Create the command preview area
+  // Create the command preview area with enhanced styling
   const commandPreview = getTopWindow().document.createElement('div');
   commandPreview.id = 'clicy-preview';
   commandPreview.style.cssText = `
-    padding: 8px 16px;
+    padding: 10px 18px;
     font-family: 'Consolas', monospace;
-    font-size: 13px;
-    color: rgba(255, 255, 255, 0.7);
-    background: rgba(0, 0, 0, 0.3);
-    border: 1px solid rgba(255, 255, 255, 0.1);
+    font-size: 14px;
+    color: rgba(255, 255, 255, 0.8);
+    background: rgba(0, 0, 0, 0.4);
+    border: 1px solid rgba(74, 136, 255, 0.3);
     border-top: none;
-    border-radius: 0 0 8px 8px;
-    min-height: 20px;
+    border-radius: 0 0 12px 12px;
+    min-height: 24px;
     transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
     overflow-x: auto;
     white-space: nowrap;
+    box-shadow: inset 0 2px 4px rgba(0, 0, 0, 0.2), 0 4px 8px rgba(0, 0, 0, 0.1);
   `;
   commandPreview.textContent = 'Preview: cy.';
 
@@ -416,95 +523,151 @@ Cypress.on('test:before:run', () => {
   commandPreview.appendChild(previewLabel);
   commandPreview.appendChild(previewContent);
 
-  // Add focus effect
+  // Add enhanced focus effect
   commandInput.addEventListener('focus', () => {
     commandInput.style.borderColor = '#4a88ff';
-    commandInput.style.boxShadow = 'inset 0 1px 3px rgba(0, 0, 0, 0.2), 0 0 0 3px rgba(74, 136, 255, 0.2), 0 0 10px rgba(74, 136, 255, 0.15)';
-    commandInput.style.background = 'rgba(0, 0, 0, 0.3)';
+    commandInput.style.boxShadow = 'inset 0 2px 4px rgba(0, 0, 0, 0.3), 0 0 0 3px rgba(74, 136, 255, 0.3), 0 0 15px rgba(74, 136, 255, 0.2)';
+    commandInput.style.background = 'rgba(0, 0, 0, 0.4)';
+    // Add subtle animation to the preview area when input is focused
+    commandPreview.style.transform = 'translateY(2px)';
   });
 
   commandInput.addEventListener('blur', () => {
-    commandInput.style.borderColor = 'rgba(255, 255, 255, 0.1)';
-    commandInput.style.boxShadow = 'inset 0 1px 3px rgba(0, 0, 0, 0.2)';
-    commandInput.style.background = 'rgba(0, 0, 0, 0.2)';
+    commandInput.style.borderColor = 'rgba(74, 136, 255, 0.3)';
+    commandInput.style.boxShadow = 'inset 0 2px 4px rgba(0, 0, 0, 0.3), 0 0 10px rgba(74, 136, 255, 0.1)';
+    commandInput.style.background = 'rgba(0, 0, 0, 0.3)';
+    // Reset preview area animation
+    commandPreview.style.transform = 'translateY(0)';
   });
 
-  // Create the autocomplete dropdown
+  // Create the autocomplete dropdown with enhanced styling
   const autocompleteDropdown = getTopWindow().document.createElement('div');
   autocompleteDropdown.id = 'clicy-autocomplete';
   autocompleteDropdown.style.cssText = `
-    position: fixed; /* Fixed position relative to the viewport instead of absolute */
-    bottom: auto; /* Remove bottom positioning */
-    top: 50%; /* Position at the middle of the screen */
-    left: 50%;
-    transform: translate(-50%, -50%); /* Center both horizontally and vertically */
-    width: 400px; /* Fixed width to ensure options are visible */
+    position: absolute; /* Position relative to its nearest positioned ancestor */
+    top: 100%; /* Position below the input field */
+    left: 0; /* Align with the left edge of the input field */
+    width: 600px; /* Increased width to match input field */
     max-width: 90vw; /* Responsive - won't exceed 90% of viewport width */
-    background: #2c3e50;
-    border: 1px solid rgba(255, 255, 255, 0.1);
-    border-radius: 8px;
-    box-shadow: 0 4px 20px rgba(0, 0, 0, 0.3), 0 0 10px rgba(74, 136, 255, 0.1);
-    height: 450px; /* Fixed height to show exactly 3 items */
-    overflow-y: auto;
+    background: linear-gradient(135deg, #0f2027, #203a43, #2c5364);
+    border: 1px solid rgba(74, 136, 255, 0.4);
+    border-radius: 16px;
+    box-shadow: 0 10px 30px rgba(0, 0, 0, 0.4), 0 0 20px rgba(74, 136, 255, 0.2), 0 0 40px rgba(0, 0, 0, 0.3);
+    max-height: 550px; /* Increased maximum height */
+    overflow-y: auto; /* Enable vertical scrolling */
     z-index: 100000; /* Increased z-index to ensure it appears above everything */
     display: none;
-    backdrop-filter: blur(5px);
+    backdrop-filter: blur(10px);
+    animation: dropdown-appear 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+    margin-top: 5px; /* Small gap between input and dropdown */
   `;
+  
+  // Add dropdown animation
+  const dropdownStyle = getTopWindow().document.createElement('style');
+  dropdownStyle.textContent = `
+    @keyframes dropdown-appear {
+      0% { opacity: 0; transform: translateY(-5px) scale(0.98); }
+      100% { opacity: 1; transform: translateY(0) scale(1); }
+    }
+    
+    /* Custom scrollbar for the dropdown */
+    #clicy-autocomplete::-webkit-scrollbar {
+      width: 8px;
+    }
+    
+    #clicy-autocomplete::-webkit-scrollbar-track {
+      background: rgba(0, 0, 0, 0.2);
+      border-radius: 4px;
+    }
+    
+    #clicy-autocomplete::-webkit-scrollbar-thumb {
+      background: rgba(74, 136, 255, 0.5);
+      border-radius: 4px;
+    }
+    
+    #clicy-autocomplete::-webkit-scrollbar-thumb:hover {
+      background: rgba(74, 136, 255, 0.7);
+    }
+  `;
+  getTopWindow().document.head.appendChild(dropdownStyle);
+
+  // Append the dropdown to the inputAndDropdownContainer instead of the document body
+  inputAndDropdownContainer.appendChild(autocompleteDropdown);
 
   // Populate the dropdown with available commands
   availableCommands.forEach(cmd => {
     const item = getTopWindow().document.createElement('div');
     item.className = 'autocomplete-item';
     item.style.cssText = `
-      padding: 12px;
+      padding: 16px;
       cursor: pointer;
-      border-bottom: 1px solid rgba(255, 255, 255, 0.05);
+      border-bottom: 1px solid rgba(74, 136, 255, 0.15);
       display: flex;
       flex-direction: column;
-      transition: all 0.2s cubic-bezier(0.4, 0, 0.2, 1);
+      transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
       width: 100%;
       box-sizing: border-box;
       height: 150px; /* Fixed height to ensure consistent sizing */
       overflow: hidden; /* Hide overflow content to avoid nested scrolling */
+      position: relative;
+      background: rgba(0, 0, 0, 0.2);
     `;
+    
+    // Add hover effect for autocomplete items
+    item.addEventListener('mouseover', () => {
+      item.style.background = 'linear-gradient(135deg, rgba(74, 136, 255, 0.1), rgba(74, 136, 255, 0.2))';
+      item.style.borderLeft = '3px solid rgba(74, 136, 255, 0.8)';
+      item.style.paddingLeft = '13px';
+    });
+    
+    item.addEventListener('mouseout', () => {
+      item.style.background = 'rgba(0, 0, 0, 0.2)';
+      item.style.borderLeft = 'none';
+      item.style.paddingLeft = '16px';
+    });
 
     const commandText = getTopWindow().document.createElement('div');
     commandText.style.cssText = `
       font-weight: 600;
-      margin-bottom: 6px;
-      color: rgba(255, 255, 255, 0.9);
-      font-size: 16px;
-      letter-spacing: 0.3px;
-      text-shadow: 0 1px 2px rgba(0, 0, 0, 0.2);
+      margin-bottom: 8px;
+      color: rgba(255, 255, 255, 0.95);
+      font-size: 17px;
+      letter-spacing: 0.5px;
+      text-shadow: 0 1px 3px rgba(0, 0, 0, 0.3);
+      background: linear-gradient(to right, #ffffff, #88b8ff);
+      -webkit-background-clip: text;
+      -webkit-text-fill-color: transparent;
     `;
     commandText.textContent = cmd.command;
 
     const descriptionText = getTopWindow().document.createElement('div');
     descriptionText.style.cssText = `
-      font-size: 13px;
-      color: rgba(255, 255, 255, 0.7);
-      margin-bottom: 8px;
-      line-height: 1.4;
+      font-size: 14px;
+      color: rgba(255, 255, 255, 0.8);
+      margin-bottom: 10px;
+      line-height: 1.5;
       max-width: 100%;
       overflow-wrap: break-word;
+      letter-spacing: 0.3px;
     `;
     descriptionText.textContent = cmd.description;
 
     const exampleText = window.top.document.createElement('div');
     exampleText.style.cssText = `
-      font-size: 11px;
+      font-size: 12px;
       color: #4a88ff;
       font-family: 'Consolas', monospace;
-      background-color: rgba(74, 136, 255, 0.1);
-      padding: 4px 8px;
-      border-radius: 4px;
+      background: linear-gradient(135deg, rgba(74, 136, 255, 0.1), rgba(74, 136, 255, 0.2));
+      padding: 8px 12px;
+      border-radius: 8px;
       display: block; /* Changed to block for full width */
-      border-left: 2px solid #4a88ff;
+      border-left: 3px solid #4a88ff;
       word-break: break-word; /* Ensures long text wraps properly */
       white-space: normal; /* Ensures text wraps */
       overflow-wrap: break-word; /* Helps with long words */
       width: 100%; /* Full width of container */
       box-sizing: border-box; /* Include padding in width calculation */
+      box-shadow: 0 2px 8px rgba(0, 0, 0, 0.2), 0 0 4px rgba(74, 136, 255, 0.2);
     `;
     exampleText.textContent = `Example: ${cmd.example}`;
 
@@ -670,8 +833,11 @@ Cypress.on('test:before:run', () => {
     autocompleteDropdown.appendChild(item);
   });
 
-  // Add the dropdown to the input container
-  inputContainer.appendChild(autocompleteDropdown);
+  // Add the dropdown to the inputAndDropdownContainer
+  inputAndDropdownContainer.appendChild(autocompleteDropdown);
+  
+  // Add the inputAndDropdownContainer to the inputContainer
+  inputContainer.appendChild(inputAndDropdownContainer);
 
   // Create the buttons container
   const buttonsContainer = window.top.document.createElement('div');
@@ -680,13 +846,13 @@ Cypress.on('test:before:run', () => {
     gap: 16px;
   `;
 
-  // Create the Run button
+  // Create the Run button with enhanced futuristic styling
   const runButton = window.top.document.createElement('button');
   runButton.innerHTML = ICONS.run;
   runButton.title = "Run the command";
   runButton.style.cssText = `
-    width: 48px;
-    height: 48px;
+    width: 52px;
+    height: 52px;
     background: linear-gradient(135deg, #43a047, #2e7d32);
     color: white;
     border: none;
@@ -697,27 +863,58 @@ Cypress.on('test:before:run', () => {
     justify-content: center;
     font-weight: bold;
     transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
-    box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1), 0 1px 3px rgba(0, 0, 0, 0.1);
+    box-shadow: 0 4px 10px rgba(0, 0, 0, 0.2), 0 0 15px rgba(46, 125, 50, 0.3);
+    position: relative;
+    overflow: hidden;
   `;
+  
+  // Add glow effect to run button
+  const runButtonGlow = window.top.document.createElement('div');
+  runButtonGlow.style.cssText = `
+    position: absolute;
+    top: 0;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    background: radial-gradient(circle at center, rgba(255, 255, 255, 0.8), transparent 70%);
+    opacity: 0;
+    transition: opacity 0.3s ease;
+    pointer-events: none;
+  `;
+  
+  runButton.appendChild(runButtonGlow);
 
-  // Add hover effect
+  // Add enhanced hover effect
   runButton.addEventListener('mouseover', () => {
-    runButton.style.transform = 'translateY(-2px)';
-    runButton.style.boxShadow = '0 6px 10px rgba(0, 0, 0, 0.2), 0 1px 3px rgba(0, 0, 0, 0.1), 0 0 10px rgba(46, 125, 50, 0.5)';
+    runButton.style.transform = 'translateY(-3px) scale(1.05)';
+    runButton.style.boxShadow = '0 8px 15px rgba(0, 0, 0, 0.3), 0 0 20px rgba(46, 125, 50, 0.5)';
+    runButtonGlow.style.opacity = '0.4';
   });
 
   runButton.addEventListener('mouseout', () => {
-    runButton.style.transform = 'translateY(0)';
-    runButton.style.boxShadow = '0 4px 6px rgba(0, 0, 0, 0.1), 0 1px 3px rgba(0, 0, 0, 0.1)';
+    runButton.style.transform = 'translateY(0) scale(1)';
+    runButton.style.boxShadow = '0 4px 10px rgba(0, 0, 0, 0.2), 0 0 15px rgba(46, 125, 50, 0.3)';
+    runButtonGlow.style.opacity = '0';
+  });
+  
+  // Add click effect
+  runButton.addEventListener('mousedown', () => {
+    runButton.style.transform = 'translateY(0) scale(0.95)';
+    runButtonGlow.style.opacity = '0.6';
+  });
+  
+  runButton.addEventListener('mouseup', () => {
+    runButton.style.transform = 'translateY(-3px) scale(1.05)';
+    runButtonGlow.style.opacity = '0.4';
   });
 
-  // Create the Export button
+  // Create the Export button with enhanced futuristic styling
   const exportButton = window.top.document.createElement('button');
   exportButton.innerHTML = ICONS.export;
   exportButton.title = "Export all commands to a file";
   exportButton.style.cssText = `
-    width: 48px;
-    height: 48px;
+    width: 52px;
+    height: 52px;
     background: linear-gradient(135deg, #2196F3, #1976D2);
     color: white;
     border: none;
@@ -728,27 +925,58 @@ Cypress.on('test:before:run', () => {
     justify-content: center;
     font-weight: bold;
     transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
-    box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1), 0 1px 3px rgba(0, 0, 0, 0.1);
+    box-shadow: 0 4px 10px rgba(0, 0, 0, 0.2), 0 0 15px rgba(33, 150, 243, 0.3);
+    position: relative;
+    overflow: hidden;
   `;
+  
+  // Add glow effect to export button
+  const exportButtonGlow = window.top.document.createElement('div');
+  exportButtonGlow.style.cssText = `
+    position: absolute;
+    top: 0;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    background: radial-gradient(circle at center, rgba(255, 255, 255, 0.8), transparent 70%);
+    opacity: 0;
+    transition: opacity 0.3s ease;
+    pointer-events: none;
+  `;
+  
+  exportButton.appendChild(exportButtonGlow);
 
-  // Add hover effect
+  // Add enhanced hover effect
   exportButton.addEventListener('mouseover', () => {
-    exportButton.style.transform = 'translateY(-2px)';
-    exportButton.style.boxShadow = '0 6px 10px rgba(0, 0, 0, 0.2), 0 1px 3px rgba(0, 0, 0, 0.1), 0 0 10px rgba(33, 150, 243, 0.5)';
+    exportButton.style.transform = 'translateY(-3px) scale(1.05)';
+    exportButton.style.boxShadow = '0 8px 15px rgba(0, 0, 0, 0.3), 0 0 20px rgba(33, 150, 243, 0.5)';
+    exportButtonGlow.style.opacity = '0.4';
   });
 
   exportButton.addEventListener('mouseout', () => {
-    exportButton.style.transform = 'translateY(0)';
-    exportButton.style.boxShadow = '0 4px 6px rgba(0, 0, 0, 0.1), 0 1px 3px rgba(0, 0, 0, 0.1)';
+    exportButton.style.transform = 'translateY(0) scale(1)';
+    exportButton.style.boxShadow = '0 4px 10px rgba(0, 0, 0, 0.2), 0 0 15px rgba(33, 150, 243, 0.3)';
+    exportButtonGlow.style.opacity = '0';
+  });
+  
+  // Add click effect
+  exportButton.addEventListener('mousedown', () => {
+    exportButton.style.transform = 'translateY(0) scale(0.95)';
+    exportButtonGlow.style.opacity = '0.6';
+  });
+  
+  exportButton.addEventListener('mouseup', () => {
+    exportButton.style.transform = 'translateY(-3px) scale(1.05)';
+    exportButtonGlow.style.opacity = '0.4';
   });
 
-  // Create the Reset button
+  // Create the Reset button with enhanced futuristic styling
   const resetButton = window.top.document.createElement('button');
   resetButton.innerHTML = ICONS.reset;
   resetButton.title = "Reset all commands";
   resetButton.style.cssText = `
-    width: 48px;
-    height: 48px;
+    width: 52px;
+    height: 52px;
     background: linear-gradient(135deg, #f44336, #d32f2f);
     color: white;
     border: none;
@@ -759,27 +987,58 @@ Cypress.on('test:before:run', () => {
     justify-content: center;
     font-weight: bold;
     transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
-    box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1), 0 1px 3px rgba(0, 0, 0, 0.1);
+    box-shadow: 0 4px 10px rgba(0, 0, 0, 0.2), 0 0 15px rgba(244, 67, 54, 0.3);
+    position: relative;
+    overflow: hidden;
   `;
+  
+  // Add glow effect to reset button
+  const resetButtonGlow = window.top.document.createElement('div');
+  resetButtonGlow.style.cssText = `
+    position: absolute;
+    top: 0;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    background: radial-gradient(circle at center, rgba(255, 255, 255, 0.8), transparent 70%);
+    opacity: 0;
+    transition: opacity 0.3s ease;
+    pointer-events: none;
+  `;
+  
+  resetButton.appendChild(resetButtonGlow);
 
-  // Add hover effect
+  // Add enhanced hover effect
   resetButton.addEventListener('mouseover', () => {
-    resetButton.style.transform = 'translateY(-2px)';
-    resetButton.style.boxShadow = '0 6px 10px rgba(0, 0, 0, 0.2), 0 1px 3px rgba(0, 0, 0, 0.1), 0 0 10px rgba(244, 67, 54, 0.5)';
+    resetButton.style.transform = 'translateY(-3px) scale(1.05)';
+    resetButton.style.boxShadow = '0 8px 15px rgba(0, 0, 0, 0.3), 0 0 20px rgba(244, 67, 54, 0.5)';
+    resetButtonGlow.style.opacity = '0.4';
   });
 
   resetButton.addEventListener('mouseout', () => {
-    resetButton.style.transform = 'translateY(0)';
-    resetButton.style.boxShadow = '0 4px 6px rgba(0, 0, 0, 0.1), 0 1px 3px rgba(0, 0, 0, 0.1)';
+    resetButton.style.transform = 'translateY(0) scale(1)';
+    resetButton.style.boxShadow = '0 4px 10px rgba(0, 0, 0, 0.2), 0 0 15px rgba(244, 67, 54, 0.3)';
+    resetButtonGlow.style.opacity = '0';
+  });
+  
+  // Add click effect
+  resetButton.addEventListener('mousedown', () => {
+    resetButton.style.transform = 'translateY(0) scale(0.95)';
+    resetButtonGlow.style.opacity = '0.6';
+  });
+  
+  resetButton.addEventListener('mouseup', () => {
+    resetButton.style.transform = 'translateY(-3px) scale(1.05)';
+    resetButtonGlow.style.opacity = '0.4';
   });
 
-  // Create the Inspect Element button
+  // Create the Inspect Element button with enhanced futuristic styling
   const inspectButton = window.top.document.createElement('button');
   inspectButton.innerHTML = '<svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="11" cy="11" r="8"></circle><line x1="21" y1="21" x2="16.65" y2="16.65"></line><line x1="11" y1="8" x2="11" y2="14"></line><line x1="8" y1="11" x2="14" y2="11"></line></svg>';
   inspectButton.title = "Inspect Element";
   inspectButton.style.cssText = `
-    width: 48px;
-    height: 48px;
+    width: 52px;
+    height: 52px;
     background: linear-gradient(135deg, #9c27b0, #673ab7);
     color: white;
     border: none;
@@ -790,18 +1049,49 @@ Cypress.on('test:before:run', () => {
     justify-content: center;
     font-weight: bold;
     transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
-    box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1), 0 1px 3px rgba(0, 0, 0, 0.1);
+    box-shadow: 0 4px 10px rgba(0, 0, 0, 0.2), 0 0 15px rgba(156, 39, 176, 0.3);
+    position: relative;
+    overflow: hidden;
   `;
+  
+  // Add glow effect to inspect button
+  const inspectButtonGlow = window.top.document.createElement('div');
+  inspectButtonGlow.style.cssText = `
+    position: absolute;
+    top: 0;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    background: radial-gradient(circle at center, rgba(255, 255, 255, 0.8), transparent 70%);
+    opacity: 0;
+    transition: opacity 0.3s ease;
+    pointer-events: none;
+  `;
+  
+  inspectButton.appendChild(inspectButtonGlow);
 
-  // Add hover effect
+  // Add enhanced hover effect
   inspectButton.addEventListener('mouseover', () => {
-    inspectButton.style.transform = 'translateY(-2px)';
-    inspectButton.style.boxShadow = '0 6px 10px rgba(0, 0, 0, 0.2), 0 1px 3px rgba(0, 0, 0, 0.1), 0 0 10px rgba(156, 39, 176, 0.5)';
+    inspectButton.style.transform = 'translateY(-3px) scale(1.05)';
+    inspectButton.style.boxShadow = '0 8px 15px rgba(0, 0, 0, 0.3), 0 0 20px rgba(156, 39, 176, 0.5)';
+    inspectButtonGlow.style.opacity = '0.4';
   });
 
   inspectButton.addEventListener('mouseout', () => {
-    inspectButton.style.transform = 'translateY(0)';
-    inspectButton.style.boxShadow = '0 4px 6px rgba(0, 0, 0, 0.1), 0 1px 3px rgba(0, 0, 0, 0.1)';
+    inspectButton.style.transform = 'translateY(0) scale(1)';
+    inspectButton.style.boxShadow = '0 4px 10px rgba(0, 0, 0, 0.2), 0 0 15px rgba(156, 39, 176, 0.3)';
+    inspectButtonGlow.style.opacity = '0';
+  });
+  
+  // Add click effect
+  inspectButton.addEventListener('mousedown', () => {
+    inspectButton.style.transform = 'translateY(0) scale(0.95)';
+    inspectButtonGlow.style.opacity = '0.6';
+  });
+  
+  inspectButton.addEventListener('mouseup', () => {
+    inspectButton.style.transform = 'translateY(-3px) scale(1.05)';
+    inspectButtonGlow.style.opacity = '0.4';
   });
 
   // Create the Smart Selector Toggle button
@@ -916,14 +1206,14 @@ Cypress.on('test:before:run', () => {
   `;
 
   // Add keyframes for the glow animation
-  const styleSheet = window.top.document.createElement('style');
-  styleSheet.textContent = `
+  const statusStyleSheet = window.top.document.createElement('style');
+  statusStyleSheet.textContent = `
     @keyframes statusGlow {
       0% { transform: translateX(-100%); }
       100% { transform: translateX(100%); }
     }
   `;
-  window.top.document.head.appendChild(styleSheet);
+  window.top.document.head.appendChild(statusStyleSheet);
 
   statusMessage.appendChild(statusGlow);
 
@@ -2805,16 +3095,27 @@ Cypress.on('test:before:run', () => {
     items.forEach(item => {
       const commandText = item.querySelector('div:first-child')?.textContent || '';
       const matchesQuery = commandText.toLowerCase().includes(query.toLowerCase());
-
-      (item as HTMLElement).style.display = matchesQuery ? 'flex' : 'none';
+      const isAdvancedCommand = commandText.includes('(') && commandText.includes('get');
 
       if (matchesQuery) {
+        const element = item as HTMLElement;
+        element.style.display = 'flex';
+        // Add visual distinction for advanced commands
+        if (isAdvancedCommand) {
+          element.style.backgroundColor = 'rgba(0, 0, 0, 0.04)';
+          element.style.borderLeft = '3px solid #4CAF50';
+          element.style.paddingLeft = '12px';
+        }
         hasVisibleItems = true;
+      } else {
+        (item as HTMLElement).style.display = 'none';
       }
     });
 
-    // Only show dropdown if there are matching items
+    // Adjust dropdown style to show more items
     autocompleteDropdown.style.display = hasVisibleItems ? 'block' : 'none';
+    autocompleteDropdown.style.maxHeight = '300px';
+    autocompleteDropdown.style.overflowY = 'auto';
   };
 
   // Add event listeners for autocomplete
@@ -2963,7 +3264,7 @@ Cypress.on('test:before:run', () => {
   });
 
   // Assemble the UI
-  inputContainer.appendChild(commandInput);
+  inputAndDropdownContainer.appendChild(commandInput);
   inputContainer.appendChild(commandPreview);
   buttonsContainer.appendChild(runButton);
   buttonsContainer.appendChild(exportButton);
