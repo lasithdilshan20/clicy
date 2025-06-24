@@ -1,12 +1,16 @@
 {
   "name": "clicy",
-  "version": "0.1.3",
+  "version": "0.1.4",
   "description": "Cypress-based CLI automation tool with REPL",
   "main": "dist/cli/repl.js",
   "bin": {
     "clicy": "dist/bin/clicy.js"
   },
   "types": "types/cypress.d.ts",
+  "exports": {
+    "./plugin": "./dist/src/plugin.js",
+    "./support": "./dist/support/e2e.js"
+  },
   "repository": {
     "type": "git",
     "url": "https://github.com/lasithdilshan20/clicy.git"

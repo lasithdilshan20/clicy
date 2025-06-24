@@ -87,9 +87,8 @@ Simply set `clicyCommand: true` in your Cypress configuration, and CliCy will au
 module.exports = {
   e2e: {
     setupNodeEvents(on, config) {
-      // Your existing setup...
+      return require('clicy/plugin').setupNodeEvents(on, config);
     },
-    // Enable CliCy
     clicyCommand: true,
   },
 }
@@ -104,10 +103,26 @@ import { defineConfig } from 'cypress';
 export default defineConfig({
   e2e: {
     setupNodeEvents(on, config) {
-      // Your existing setup...
+      return require('clicy/plugin').setupNodeEvents(on, config);
     },
-    // Enable CliCy
     clicyCommand: true, // TypeScript type definitions included
+  },
+});
+```
+
+Alternatively, for TypeScript projects with imports:
+
+```typescript
+// cypress.config.ts
+import { defineConfig } from 'cypress';
+import clicyPlugin from 'clicy/plugin';
+
+export default defineConfig({
+  e2e: {
+    setupNodeEvents(on, config) {
+      return clicyPlugin.setupNodeEvents(on, config);
+    },
+    clicyCommand: true,
   },
 });
 ```
