@@ -93,8 +93,7 @@ function generateLiveSpec(projectRoot, force = false) {
   const tsTemplate = `
 describe('Live CLI Commands', () => {
   it('executes REPL steps', () => {
-    cy.visit('/');
-    // Commands will be dynamically injected by CliCy
+   
   });
 });
 `;
@@ -103,8 +102,7 @@ describe('Live CLI Commands', () => {
   const jsTemplate = `
 describe('Live CLI Commands', () => {
   it('executes REPL steps', () => {
-    cy.visit('/');
-    // Commands will be dynamically injected by CliCy
+    
   });
 });
 `;
@@ -143,6 +141,168 @@ describe('Live CLI Commands', () => {
   }
 }
 
+// Function to update the Cypress configuration file
+function updateCypressConfig(projectRoot) {
+  const configPath = path.join(projectRoot, 'cypress.config.js');
+  const tsConfigPath = path.join(projectRoot, 'cypress.config.ts');
+
+  if (fs.existsSync(tsConfigPath)) {
+    console.log(`CliCy: Found Cypress TypeScript config at ${tsConfigPath}`);
+    try {
+      let configContent = fs.readFileSync(tsConfigPath, 'utf8');
+
+      // Check if the config already imports clicy
+      if (!configContent.includes('clicy')) {
+        // Add import for clicy plugin
+        if (configContent.includes('import')) {
+          // Add after the last import
+          configContent = configContent.replace(
+            /(import.*?;\n)(?!import)/s,
+            '$1import clicyPlugin from \'clicy/plugin\';\n'
+          );
+        } else {
+          // Add at the beginning of the file
+          configContent = `import clicyPlugin from 'clicy/plugin';\n${configContent}`;
+        }
+
+        // Update setupNodeEvents function
+        if (configContent.includes('setupNodeEvents')) {
+          // Replace existing setupNodeEvents function
+          configContent = configContent.replace(
+            /setupNodeEvents\s*\(\s*on\s*,\s*config\s*\)\s*{[^}]*}/s,
+            `setupNodeEvents(on, config) {
+      // Apply CliCy plugin
+      config = clicyPlugin(on, config);
+      return config;
+    }`
+          );
+        } else if (configContent.includes('e2e:')) {
+          // Add setupNodeEvents to e2e config
+          configContent = configContent.replace(
+            /e2e:\s*{/,
+            `e2e: {
+    setupNodeEvents(on, config) {
+      // Apply CliCy plugin
+      config = clicyPlugin(on, config);
+      return config;
+    },`
+          );
+        }
+
+        fs.writeFileSync(tsConfigPath, configContent);
+        console.log(`CliCy: Updated Cypress TypeScript config to use CliCy plugin`);
+      } else {
+        console.log(`CliCy: Cypress config already includes CliCy plugin`);
+      }
+    } catch (error) {
+      console.error(`CliCy: Error updating Cypress TypeScript config:`, error);
+    }
+
+    return true;
+  } else if (fs.existsSync(configPath)) {
+    console.log(`CliCy: Found Cypress JavaScript config at ${configPath}`);
+    try {
+      let configContent = fs.readFileSync(configPath, 'utf8');
+
+      // Check if the config already imports clicy
+      if (!configContent.includes('clicy')) {
+        // Add require for clicy plugin
+        if (configContent.includes('require')) {
+          // Add after the last require
+          configContent = configContent.replace(
+            /(const.*?require.*?;\n)(?!const)/s,
+            '$1const clicyPlugin = require(\'clicy/plugin\');\n'
+          );
+        } else {
+          // Add at the beginning of the file
+          configContent = `const clicyPlugin = require('clicy/plugin');\n${configContent}`;
+        }
+
+        // Update setupNodeEvents function
+        if (configContent.includes('setupNodeEvents')) {
+          // Replace existing setupNodeEvents function
+          configContent = configContent.replace(
+            /setupNodeEvents\s*\(\s*on\s*,\s*config\s*\)\s*{[^}]*}/s,
+            `setupNodeEvents(on, config) {
+      // Apply CliCy plugin
+      config = clicyPlugin(on, config);
+      return config;
+    }`
+          );
+        } else if (configContent.includes('e2e:')) {
+          // Add setupNodeEvents to e2e config
+          configContent = configContent.replace(
+            /e2e:\s*{/,
+            `e2e: {
+    setupNodeEvents(on, config) {
+      // Apply CliCy plugin
+      config = clicyPlugin(on, config);
+      return config;
+    },`
+          );
+        }
+
+        fs.writeFileSync(configPath, configContent);
+        console.log(`CliCy: Updated Cypress JavaScript config to use CliCy plugin`);
+      } else {
+        console.log(`CliCy: Cypress config already includes CliCy plugin`);
+      }
+    } catch (error) {
+      console.error(`CliCy: Error updating Cypress JavaScript config:`, error);
+    }
+
+    return true;
+  } else {
+    console.log(`CliCy: No Cypress config file found. Creating a default one...`);
+
+    // Determine if the project uses TypeScript
+    const isTS = isTypeScriptProject(projectRoot);
+
+    // Create a default config file
+    const configFileName = isTS ? 'cypress.config.ts' : 'cypress.config.js';
+    const configFilePath = path.join(projectRoot, configFileName);
+
+    const configTemplate = isTS 
+      ? `import { defineConfig } from 'cypress';
+import clicyPlugin from 'clicy/plugin';
+
+export default defineConfig({
+  e2e: {
+    setupNodeEvents(on, config) {
+      // Apply CliCy plugin
+      config = clicyPlugin(on, config);
+      return config;
+    },
+    clicyCommand: true,
+    specPattern: 'cypress/e2e/**/*.cy.{js,ts}',
+  },
+});`
+      : `const { defineConfig } = require('cypress');
+const clicyPlugin = require('clicy/plugin');
+
+module.exports = defineConfig({
+  e2e: {
+    setupNodeEvents(on, config) {
+      // Apply CliCy plugin
+      config = clicyPlugin(on, config);
+      return config;
+    },
+    clicyCommand: true,
+    specPattern: 'cypress/e2e/**/*.cy.{js,ts}',
+  },
+});`;
+
+    try {
+      fs.writeFileSync(configFilePath, configTemplate);
+      console.log(`CliCy: Created default Cypress config at ${configFilePath}`);
+      return true;
+    } catch (error) {
+      console.error(`CliCy: Error creating default Cypress config:`, error);
+      return false;
+    }
+  }
+}
+
 // Main function
 function main() {
   console.log('CliCy: Setting up...');
@@ -167,26 +327,11 @@ function main() {
     // Copy the support file
     copySupportFile(projectRoot);
 
-    // Check if we need to update the Cypress config file
-    const configPath = path.join(projectRoot, 'cypress.config.js');
-    const tsConfigPath = path.join(projectRoot, 'cypress.config.ts');
-
-    if (fs.existsSync(tsConfigPath)) {
-      console.log(`CliCy: Found Cypress TypeScript config at ${tsConfigPath}`);
-      console.log(`CliCy: To enable the REPL, add 'clicyCommand: true' to your e2e configuration.`);
-      console.log(`CliCy: Make sure to import the support file in your Cypress configuration:`);
-      console.log(`CliCy: import './cypress/support/e2e.ts';`);
-    } else if (fs.existsSync(configPath)) {
-      console.log(`CliCy: Found Cypress JavaScript config at ${configPath}`);
-      console.log(`CliCy: To enable the REPL, add 'clicyCommand: true' to your e2e configuration.`);
-      console.log(`CliCy: Make sure to import the support file in your Cypress configuration:`);
-      console.log(`CliCy: require('./cypress/support/e2e.ts');`);
-    } else {
-      console.log(`CliCy: No Cypress config file found. Please create one and add 'clicyCommand: true' to enable the REPL.`);
-      console.log(`CliCy: Make sure to import the support file in your Cypress configuration.`);
-    }
+    // Update or create the Cypress configuration file
+    updateCypressConfig(projectRoot);
 
     console.log('CliCy: Setup completed successfully');
+    console.log('CliCy: You can now run "npx cypress open" to start using CliCy');
   } catch (error) {
     console.error('CliCy: Setup failed:', error);
     process.exit(1);

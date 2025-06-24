@@ -25,31 +25,48 @@ npm install -g clicy
 
 ## Getting Started
 
-### CLI Mode
+### Quick Start
+
+1. Install CliCy:
+   ```bash
+   npm install --save-dev clicy
+   ```
+
+2. Add `clicyCommand: true` to your Cypress configuration:
+   ```javascript
+   // cypress.config.js
+   module.exports = {
+     e2e: {
+       // Enable CliCy
+       clicyCommand: true,
+     },
+   }
+   ```
+
+3. Run Cypress:
+   ```bash
+   npx cypress open
+   ```
+
+That's it! The CliCy REPL will automatically activate and the live spec will be available in the Cypress Test Runner.
+
+### CLI Mode (Optional)
+
+If you prefer using the CLI directly:
 
 ```bash
-# Start the REPL
+# Start the REPL in CLI mode
 npx clicy
 
-# Or globally
+# Or if installed globally
 clicy
 ```
 
-### Cypress Test Runner UI (Live Panel)
+### Manual Setup (Advanced)
 
-#### Automatic Mode (Recommended)
+If you need more control over the setup:
 
-Simply run Cypress as usual:
-
-```bash
-npx cypress open
-```
-
-The CliCy REPL will automatically activate and the live spec will be available in the Cypress Test Runner.
-
-#### Manual Mode
-
-1. Start the server:
+1. Start the server manually:
    ```bash
    npm run clicy:server
    ```
@@ -63,38 +80,33 @@ The CliCy REPL will automatically activate and the live spec will be available i
 
 ### Configuration
 
-You can enable or disable CliCy in your Cypress configuration:
+Simply set `clicyCommand: true` in your Cypress configuration, and CliCy will automatically set up everything for you:
 
 ```javascript
 // cypress.config.js
-// Import the CliCy support file
-require('./cypress/support/e2e.ts');
-
 module.exports = {
   e2e: {
     setupNodeEvents(on, config) {
       // Your existing setup...
     },
-    // Enable or disable CliCy (default is true)
+    // Enable CliCy
     clicyCommand: true,
   },
 }
 ```
 
-For TypeScript projects, the type definitions are included:
+For TypeScript projects:
 
 ```typescript
 // cypress.config.ts
 import { defineConfig } from 'cypress';
-// Import the CliCy support file
-import './cypress/support/e2e.ts';
 
 export default defineConfig({
   e2e: {
     setupNodeEvents(on, config) {
       // Your existing setup...
     },
-    // Enable or disable CliCy (default is true)
+    // Enable CliCy
     clicyCommand: true, // TypeScript type definitions included
   },
 });
@@ -169,20 +181,19 @@ npm run cypress:open
 
 ### UI Panel not loading?
 
-- Ensure server is running on port `4000`:  
-  `npm run clicy:server`
-- Check browser dev tools for CORS or port conflicts
-- Make sure you've imported the support file in your Cypress configuration:
-  ```typescript
-  // For TypeScript projects
-  import './cypress/support/e2e.ts';
-  ```
-  ```javascript
-  // For JavaScript projects
-  require('./cypress/support/e2e.ts');
-  ```
 - Verify that `clicyCommand: true` is set in your Cypress configuration
-- If using Clicy as a plugin in a separate project, make sure you've run `npm install --save-dev clicy` to install it properly
+- Make sure you've installed CliCy properly: `npm install --save-dev clicy`
+- Check browser dev tools for CORS or port conflicts
+- If you're using a custom Cypress configuration that overrides the default settings, make sure you're not overriding the CliCy plugin setup
+- For manual setup, ensure server is running on port `4000`: `npm run clicy:server`
+
+### Still having issues?
+
+If the automatic setup doesn't work for your project:
+
+1. Check that your Cypress configuration file (cypress.config.js or cypress.config.ts) was properly updated during installation
+2. Try running `npx cypress open` with the `--config-file` option to specify your configuration file
+3. If all else fails, you can manually set up CliCy by following the "Manual Setup" instructions in the Getting Started section
 
 ---
 
