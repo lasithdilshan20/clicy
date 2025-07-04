@@ -76,8 +76,8 @@ Cypress.on('test:before:run', () => {
   console.log('[CLICY DEBUG] Checking if server is running...');
 
   // Function to check server connection with retries
-  const checkServerWithRetries = (retries = 5, delay = 1000) => {
-    console.log(`[CLICY DEBUG] Checking server connection (attempt ${6 - retries}/5)...`);
+  const checkServerWithRetries = (retries = 15, delay = 2000) => {
+    console.log(`[CLICY DEBUG] Checking server connection (attempt ${16 - retries}/15)...`);
 
     fetch('http://localhost:4000/commands', {
       method: 'GET',
@@ -87,7 +87,7 @@ Cypress.on('test:before:run', () => {
         console.log('[CLICY DEBUG] Server is running');
       })
       .catch(error => {
-        console.error(`[CLICY DEBUG] Server connection attempt ${6 - retries} failed:`, error);
+        console.error(`[CLICY DEBUG] Server connection attempt ${16 - retries} failed:`, error);
 
         if (retries > 1) {
           // Try again after delay
@@ -265,7 +265,7 @@ Cypress.on('test:before:run', () => {
     position: relative;
     overflow: hidden;
   `;
-  
+
   // Add a subtle animated glow effect to the header
   const headerGlow = getTopWindow().document.createElement('div');
   headerGlow.style.cssText = `
@@ -279,7 +279,7 @@ Cypress.on('test:before:run', () => {
     animation: header-glow 8s infinite;
     pointer-events: none;
   `;
-  
+
   // Add the animation keyframes to the document
   const styleSheet = getTopWindow().document.createElement('style');
   styleSheet.textContent = `
@@ -290,7 +290,7 @@ Cypress.on('test:before:run', () => {
     }
   `;
   getTopWindow().document.head.appendChild(styleSheet);
-  
+
   headerBar.appendChild(headerGlow);
 
   // Create the title with enhanced favicon
@@ -311,7 +311,7 @@ Cypress.on('test:before:run', () => {
     align-items: center;
     justify-content: center;
   `;
-  
+
   const faviconGlow = getTopWindow().document.createElement('div');
   faviconGlow.style.cssText = `
     position: absolute;
@@ -322,7 +322,7 @@ Cypress.on('test:before:run', () => {
     filter: blur(6px);
     animation: pulse 2s infinite;
   `;
-  
+
   const favicon = getTopWindow().document.createElement('img');
   favicon.src = 'http://localhost:4000/favicon.ico?v=' + new Date().getTime();
   favicon.style.cssText = `
@@ -333,10 +333,10 @@ Cypress.on('test:before:run', () => {
     z-index: 1;
     box-shadow: 0 0 10px rgba(74, 136, 255, 0.7);
   `;
-  
+
   faviconContainer.appendChild(faviconGlow);
   faviconContainer.appendChild(favicon);
-  
+
   // Add pulse animation
   const pulseStyle = getTopWindow().document.createElement('style');
   pulseStyle.textContent = `
@@ -427,7 +427,7 @@ Cypress.on('test:before:run', () => {
     position: relative;
     overflow: hidden;
   `;
-  
+
   // Add subtle background pattern
   const patternOverlay = getTopWindow().document.createElement('div');
   patternOverlay.style.cssText = `
@@ -441,7 +441,7 @@ Cypress.on('test:before:run', () => {
     pointer-events: none;
     opacity: 0.3;
   `;
-  
+
   contentContainer.appendChild(patternOverlay);
 
   // Create the input field with enhanced styling
@@ -453,14 +453,14 @@ Cypress.on('test:before:run', () => {
     position: relative;
     z-index: 1;
   `;
-  
+
   // This will be the container for the input and dropdown to ensure proper positioning
   const inputAndDropdownContainer = getTopWindow().document.createElement('div');
   inputAndDropdownContainer.style.cssText = `
     position: relative;
     width: 100%;
   `;
-  
+
   inputContainer.appendChild(inputAndDropdownContainer);
 
   const commandInput = getTopWindow().document.createElement('input');
@@ -561,7 +561,7 @@ Cypress.on('test:before:run', () => {
     animation: dropdown-appear 0.3s cubic-bezier(0.4, 0, 0.2, 1);
     margin-top: 5px; /* Small gap between input and dropdown */
   `;
-  
+
   // Add dropdown animation
   const dropdownStyle = getTopWindow().document.createElement('style');
   dropdownStyle.textContent = `
@@ -569,22 +569,22 @@ Cypress.on('test:before:run', () => {
       0% { opacity: 0; transform: translateY(-5px) scale(0.98); }
       100% { opacity: 1; transform: translateY(0) scale(1); }
     }
-    
+
     /* Custom scrollbar for the dropdown */
     #clicy-autocomplete::-webkit-scrollbar {
       width: 8px;
     }
-    
+
     #clicy-autocomplete::-webkit-scrollbar-track {
       background: rgba(0, 0, 0, 0.2);
       border-radius: 4px;
     }
-    
+
     #clicy-autocomplete::-webkit-scrollbar-thumb {
       background: rgba(74, 136, 255, 0.5);
       border-radius: 4px;
     }
-    
+
     #clicy-autocomplete::-webkit-scrollbar-thumb:hover {
       background: rgba(74, 136, 255, 0.7);
     }
@@ -612,14 +612,14 @@ Cypress.on('test:before:run', () => {
       position: relative;
       background: rgba(0, 0, 0, 0.2);
     `;
-    
+
     // Add hover effect for autocomplete items
     item.addEventListener('mouseover', () => {
       item.style.background = 'linear-gradient(135deg, rgba(74, 136, 255, 0.1), rgba(74, 136, 255, 0.2))';
       item.style.borderLeft = '3px solid rgba(74, 136, 255, 0.8)';
       item.style.paddingLeft = '13px';
     });
-    
+
     item.addEventListener('mouseout', () => {
       item.style.background = 'rgba(0, 0, 0, 0.2)';
       item.style.borderLeft = 'none';
@@ -835,7 +835,7 @@ Cypress.on('test:before:run', () => {
 
   // Add the dropdown to the inputAndDropdownContainer
   inputAndDropdownContainer.appendChild(autocompleteDropdown);
-  
+
   // Add the inputAndDropdownContainer to the inputContainer
   inputContainer.appendChild(inputAndDropdownContainer);
 
@@ -867,7 +867,7 @@ Cypress.on('test:before:run', () => {
     position: relative;
     overflow: hidden;
   `;
-  
+
   // Add glow effect to run button
   const runButtonGlow = window.top.document.createElement('div');
   runButtonGlow.style.cssText = `
@@ -881,7 +881,7 @@ Cypress.on('test:before:run', () => {
     transition: opacity 0.3s ease;
     pointer-events: none;
   `;
-  
+
   runButton.appendChild(runButtonGlow);
 
   // Add enhanced hover effect
@@ -896,13 +896,13 @@ Cypress.on('test:before:run', () => {
     runButton.style.boxShadow = '0 4px 10px rgba(0, 0, 0, 0.2), 0 0 15px rgba(46, 125, 50, 0.3)';
     runButtonGlow.style.opacity = '0';
   });
-  
+
   // Add click effect
   runButton.addEventListener('mousedown', () => {
     runButton.style.transform = 'translateY(0) scale(0.95)';
     runButtonGlow.style.opacity = '0.6';
   });
-  
+
   runButton.addEventListener('mouseup', () => {
     runButton.style.transform = 'translateY(-3px) scale(1.05)';
     runButtonGlow.style.opacity = '0.4';
@@ -929,7 +929,7 @@ Cypress.on('test:before:run', () => {
     position: relative;
     overflow: hidden;
   `;
-  
+
   // Add glow effect to export button
   const exportButtonGlow = window.top.document.createElement('div');
   exportButtonGlow.style.cssText = `
@@ -943,7 +943,7 @@ Cypress.on('test:before:run', () => {
     transition: opacity 0.3s ease;
     pointer-events: none;
   `;
-  
+
   exportButton.appendChild(exportButtonGlow);
 
   // Add enhanced hover effect
@@ -958,13 +958,13 @@ Cypress.on('test:before:run', () => {
     exportButton.style.boxShadow = '0 4px 10px rgba(0, 0, 0, 0.2), 0 0 15px rgba(33, 150, 243, 0.3)';
     exportButtonGlow.style.opacity = '0';
   });
-  
+
   // Add click effect
   exportButton.addEventListener('mousedown', () => {
     exportButton.style.transform = 'translateY(0) scale(0.95)';
     exportButtonGlow.style.opacity = '0.6';
   });
-  
+
   exportButton.addEventListener('mouseup', () => {
     exportButton.style.transform = 'translateY(-3px) scale(1.05)';
     exportButtonGlow.style.opacity = '0.4';
@@ -991,7 +991,7 @@ Cypress.on('test:before:run', () => {
     position: relative;
     overflow: hidden;
   `;
-  
+
   // Add glow effect to reset button
   const resetButtonGlow = window.top.document.createElement('div');
   resetButtonGlow.style.cssText = `
@@ -1005,7 +1005,7 @@ Cypress.on('test:before:run', () => {
     transition: opacity 0.3s ease;
     pointer-events: none;
   `;
-  
+
   resetButton.appendChild(resetButtonGlow);
 
   // Add enhanced hover effect
@@ -1020,13 +1020,13 @@ Cypress.on('test:before:run', () => {
     resetButton.style.boxShadow = '0 4px 10px rgba(0, 0, 0, 0.2), 0 0 15px rgba(244, 67, 54, 0.3)';
     resetButtonGlow.style.opacity = '0';
   });
-  
+
   // Add click effect
   resetButton.addEventListener('mousedown', () => {
     resetButton.style.transform = 'translateY(0) scale(0.95)';
     resetButtonGlow.style.opacity = '0.6';
   });
-  
+
   resetButton.addEventListener('mouseup', () => {
     resetButton.style.transform = 'translateY(-3px) scale(1.05)';
     resetButtonGlow.style.opacity = '0.4';
@@ -1053,7 +1053,7 @@ Cypress.on('test:before:run', () => {
     position: relative;
     overflow: hidden;
   `;
-  
+
   // Add glow effect to inspect button
   const inspectButtonGlow = window.top.document.createElement('div');
   inspectButtonGlow.style.cssText = `
@@ -1067,7 +1067,7 @@ Cypress.on('test:before:run', () => {
     transition: opacity 0.3s ease;
     pointer-events: none;
   `;
-  
+
   inspectButton.appendChild(inspectButtonGlow);
 
   // Add enhanced hover effect
@@ -1082,13 +1082,13 @@ Cypress.on('test:before:run', () => {
     inspectButton.style.boxShadow = '0 4px 10px rgba(0, 0, 0, 0.2), 0 0 15px rgba(156, 39, 176, 0.3)';
     inspectButtonGlow.style.opacity = '0';
   });
-  
+
   // Add click effect
   inspectButton.addEventListener('mousedown', () => {
     inspectButton.style.transform = 'translateY(0) scale(0.95)';
     inspectButtonGlow.style.opacity = '0.6';
   });
-  
+
   inspectButton.addEventListener('mouseup', () => {
     inspectButton.style.transform = 'translateY(-3px) scale(1.05)';
     inspectButtonGlow.style.opacity = '0.4';
