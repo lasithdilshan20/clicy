@@ -9,7 +9,7 @@
   "types": "types/cypress.d.ts",
   "exports": {
     "./plugin": "./dist/src/plugin.js",
-    "./support": "./dist/support/e2e.js"
+    "./support": "./dist/support/index.js"
   },
   "repository": {
     "type": "git",
@@ -41,7 +41,8 @@
     "clicy:start": "ts-node start.ts",
     "test": "jest",
     "test:watch": "jest --watch",
-    "postinstall": "node scripts/setup.js"
+    "postinstall": "node scripts/setup.js",
+    "pack": "npm run build && npm pack"
   },
   "keywords": [
     "cypress",
