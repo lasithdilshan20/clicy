@@ -68,6 +68,87 @@ function findTypeScriptFiles(dir) {
   return false;
 }
 
+// Global variable to keep track of the server process
+let serverProcess = null;
+
+/**
+ * Starts the CliCy server if it's not already running
+ * @returns {ChildProcess|null}
+ */
+function startServer() {
+  if (serverProcess) {
+    console.log('[CliCy] Server is already running');
+    return serverProcess;
+  }
+
+  console.log('[CliCy] Starting server...');
+
+  // Resolve paths relative to the installed package
+  const packageRoot = path.dirname(require.resolve('clicy/package.json'));
+  const serverJsPath = path.join(packageRoot, 'dist', 'cli', 'server.js');
+  const serverTsPath = path.join(packageRoot, 'cli', 'server.ts');
+
+  const env = { ...process.env, CLICY_QUIET: 'true' };
+  const { spawn } = require('child_process');
+
+  if (fs.existsSync(serverJsPath)) {
+    console.log('[CliCy] Using production server path:', serverJsPath);
+    serverProcess = spawn('node', [serverJsPath], {
+      stdio: 'inherit',
+      shell: true,
+      detached: false,
+      env,
+      windowsHide: false,
+    });
+  } else if (fs.existsSync(serverTsPath)) {
+    console.log('[CliCy] Using development server path:', serverTsPath);
+    serverProcess = spawn('npx', ['ts-node', serverTsPath], {
+      stdio: 'inherit',
+      shell: true,
+      detached: false,
+      env,
+      windowsHide: false,
+    });
+  } else {
+    console.error('[CliCy] Server file not found. Please make sure the project is set up correctly.');
+    return null;
+  }
+
+  serverProcess.on('error', (error) => {
+    console.error('[CliCy] Failed to start server:', error);
+    serverProcess = null;
+  });
+
+  return serverProcess;
+}
+
+/**
+ * Sets up server lifecycle hooks with Cypress
+ * @param {any} on Cypress on function
+ */
+function setupServerHooks(on) {
+  on('before:browser:launch', () => {
+    if (!serverProcess) {
+      startServer();
+    }
+  });
+
+  on('after:run', () => {
+    if (serverProcess) {
+      if (process.platform === 'win32') {
+        const { spawn } = require('child_process');
+        spawn('taskkill', ['/pid', serverProcess.pid.toString(), '/f', '/t'], {
+          stdio: 'inherit',
+          windowsHide: false,
+        });
+      } else {
+        process.kill(-serverProcess.pid);
+      }
+      serverProcess = null;
+    }
+  });
+}
+
 /**
  * Copies the support file to the user's project
  * @param {string} projectRoot The root directory of the project
@@ -207,84 +288,11 @@ function setupCliCy(on, config) {
   // Log a message when CliCy starts
   console.log("[CliCy] REPL enabled. Open 'live.cy.ts' to begin scripting interactively.");
 
-  // Start the server automatically when Cypress starts
-  let serverProcess;
+  // Start the server immediately so it's ready before tests run
+  startServer();
 
-  on('before:browser:launch', (browser, launchOptions) => {
-    // Set environment variable to hide server startup message
-    process.env.CLICY_QUIET = 'true';
-
-    // Check if ts-node is available
-    const serverPath = path.join(__dirname, '..', 'cli', 'server.ts');
-    const serverJsPath = path.join(__dirname, '..', 'dist', 'cli', 'server.js');
-
-    // Create environment object with CLICY_QUIET set to true
-    const env = { ...process.env, CLICY_QUIET: 'true' };
-
-    const { spawn } = require('child_process');
-
-    if (fs.existsSync(serverPath)) {
-      // Use ts-node for development
-      serverProcess = spawn('npx', ['ts-node', serverPath], {
-        stdio: 'ignore', // Hide console window
-        shell: true,
-        detached: true,
-        env,
-        windowsHide: true
-      });
-    } else if (fs.existsSync(serverJsPath)) {
-      // Use compiled JS for production
-      serverProcess = spawn('node', [serverJsPath], {
-        stdio: 'ignore', // Hide console window
-        shell: true,
-        detached: true,
-        env,
-        windowsHide: true
-      });
-    } else {
-      console.error('Server file not found. Please make sure the project is set up correctly.');
-      return launchOptions;
-    }
-
-    // Handle server process errors
-    serverProcess.on('error', (error) => {
-      console.error('Failed to start server:', error);
-    });
-
-    // Give the server a moment to start up
-    setTimeout(() => {
-      // Only log if not in quiet mode
-      if (process.env.CLICY_QUIET !== 'true') {
-        console.log('Clicy server started successfully');
-      }
-    }, 2000);
-
-    return launchOptions;
-  });
-
-  // Clean up the server process when Cypress exits
-  on('after:run', () => {
-    if (serverProcess) {
-      // Only log if not in quiet mode
-      if (process.env.CLICY_QUIET !== 'true') {
-        console.log('Shutting down Clicy server...');
-      }
-      // Kill the process and all its children
-      if (process.platform === 'win32') {
-        if (serverProcess.pid) {
-          const { spawn } = require('child_process');
-          spawn('taskkill', ['/pid', serverProcess.pid.toString(), '/f', '/t'], {
-            stdio: 'ignore',
-            windowsHide: true
-          });
-        }
-      } else {
-        if (serverProcess.pid) {
-          process.kill(-serverProcess.pid);
-        }
-      }
-    }
-  });
+  // Register hooks to manage the server lifecycle
+  setupServerHooks(on);
 
   // Return the updated config
   return config;
