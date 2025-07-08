@@ -330,8 +330,12 @@ function startServer(): any {
   process.env.CLICY_QUIET = 'true';
 
   // Check if ts-node is available
-  const serverJsPath = path.resolve(__dirname, '../../dist/cli/server.js');
-  const serverPath = path.resolve(__dirname, '../../cli/server.ts');
+  // Use the compiled server by default when available
+  // __dirname points to dist/src/plugin when packaged
+  // This resolves to dist/cli/server.js
+  const serverJsPath = path.resolve(__dirname, '../../cli/server.js');
+  // Fallback to the TypeScript source for development installs
+  const serverPath = path.resolve(__dirname, '../../../cli/server.ts');
 
   // Create environment object with CLICY_QUIET set to true
   const env = { ...process.env, CLICY_QUIET: 'true' };
