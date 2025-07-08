@@ -326,8 +326,6 @@ function startServer(): any {
 
   console.log('[CliCy] Starting server...');
 
-  // Set environment variable to hide server startup message
-  process.env.CLICY_QUIET = 'true';
 
   // Resolve paths relative to the package root so the plugin works
   // correctly whether running from source or from the compiled package
@@ -347,8 +345,8 @@ function startServer(): any {
   console.log(`  - ${serverJsPath} ${fs.existsSync(serverJsPath) ? 'found' : 'not found'}`);
   console.log(`  - ${serverPath} ${fs.existsSync(serverPath) ? 'found' : 'not found'}`);
 
-  // Create environment object with CLICY_QUIET set to true
-  const env = { ...process.env, CLICY_QUIET: 'true' };
+  // Use the current environment so server output is visible
+  const env = { ...process.env };
 
   const { spawn } = require('child_process');
 

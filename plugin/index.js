@@ -94,7 +94,8 @@ function startServer() {
   console.log(`  - ${serverJsPath} ${fs.existsSync(serverJsPath) ? 'found' : 'not found'}`);
   console.log(`  - ${serverTsPath} ${fs.existsSync(serverTsPath) ? 'found' : 'not found'}`);
 
-  const env = { ...process.env, CLICY_QUIET: 'true' };
+  // Use the current environment so server output is visible
+  const env = { ...process.env };
   const { spawn } = require('child_process');
 
   if (fs.existsSync(serverJsPath)) {
