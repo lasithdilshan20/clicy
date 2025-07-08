@@ -329,13 +329,17 @@ function startServer(): any {
   // Set environment variable to hide server startup message
   process.env.CLICY_QUIET = 'true';
 
-  // Check if ts-node is available
-  // Use the compiled server by default when available
-  // __dirname points to dist/src/plugin when packaged
-  // This resolves to dist/cli/server.js
-  const serverJsPath = path.resolve(__dirname, '../../cli/server.js');
-  // Fallback to the TypeScript source for development installs
-  const serverPath = path.resolve(__dirname, '../../../cli/server.ts');
+  // Resolve paths relative to the package root so the plugin works
+  // correctly whether running from source or from the compiled package
+  const packageRoot = path.dirname(require.resolve('clicy/package.json'));
+
+  // Use the compiled server by default when available. This will exist when the
+  // plugin is installed from npm ("dist/cli/server.js").
+  const serverJsPath = path.join(packageRoot, 'dist', 'cli', 'server.js');
+
+  // Fallback to the TypeScript source for development setups where the server
+  // has not been compiled yet ("cli/server.ts").
+  const serverPath = path.join(packageRoot, 'cli', 'server.ts');
 
   // Create environment object with CLICY_QUIET set to true
   const env = { ...process.env, CLICY_QUIET: 'true' };
