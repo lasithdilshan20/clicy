@@ -330,8 +330,8 @@ function startServer(): any {
   process.env.CLICY_QUIET = 'true';
 
   // Check if ts-node is available
-  const serverPath = path.resolve(__dirname, '../../cli/server.ts');
   const serverJsPath = path.resolve(__dirname, '../../dist/cli/server.js');
+  const serverPath = path.resolve(__dirname, '../../cli/server.ts');
 
   // Create environment object with CLICY_QUIET set to true
   const env = { ...process.env, CLICY_QUIET: 'true' };
@@ -339,20 +339,20 @@ function startServer(): any {
   const { spawn } = require('child_process');
 
   try {
-    if (fs.existsSync(serverPath)) {
-      // Use ts-node for development
-      console.log('[CliCy] Using development server path:', serverPath);
-      serverProcess = spawn('npx', ['ts-node', serverPath], {
+    if (fs.existsSync(serverJsPath)) {
+      // Use compiled JS for production by default
+      console.log('[CliCy] Using production server path:', serverJsPath);
+      serverProcess = spawn('node', [serverJsPath], {
         stdio: 'inherit', // Show console window for better debugging
         shell: true,
         detached: false, // Keep process attached to parent
         env,
         windowsHide: false // Make sure window is visible on Windows
       });
-    } else if (fs.existsSync(serverJsPath)) {
-      // Use compiled JS for production
-      console.log('[CliCy] Using production server path:', serverJsPath);
-      serverProcess = spawn('node', [serverJsPath], {
+    } else if (fs.existsSync(serverPath)) {
+      // Fallback to ts-node for development setups
+      console.log('[CliCy] Using development server path:', serverPath);
+      serverProcess = spawn('npx', ['ts-node', serverPath], {
         stdio: 'inherit', // Show console window for better debugging
         shell: true,
         detached: false, // Keep process attached to parent
