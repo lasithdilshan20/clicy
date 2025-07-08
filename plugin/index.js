@@ -88,6 +88,12 @@ function startServer() {
   const serverJsPath = path.join(packageRoot, 'dist', 'cli', 'server.js');
   const serverTsPath = path.join(packageRoot, 'cli', 'server.ts');
 
+  // Extra logs to help debug the resolved paths
+  console.log('[CliCy] packageRoot:', packageRoot);
+  console.log('[CliCy] Looking for server files...');
+  console.log(`  - ${serverJsPath} ${fs.existsSync(serverJsPath) ? 'found' : 'not found'}`);
+  console.log(`  - ${serverTsPath} ${fs.existsSync(serverTsPath) ? 'found' : 'not found'}`);
+
   const env = { ...process.env, CLICY_QUIET: 'true' };
   const { spawn } = require('child_process');
 

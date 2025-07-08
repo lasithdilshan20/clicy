@@ -341,6 +341,12 @@ function startServer(): any {
   // has not been compiled yet ("cli/server.ts").
   const serverPath = path.join(packageRoot, 'cli', 'server.ts');
 
+  // Additional logging to help debug path resolution issues
+  console.log('[CliCy] packageRoot:', packageRoot);
+  console.log('[CliCy] Looking for server files...');
+  console.log(`  - ${serverJsPath} ${fs.existsSync(serverJsPath) ? 'found' : 'not found'}`);
+  console.log(`  - ${serverPath} ${fs.existsSync(serverPath) ? 'found' : 'not found'}`);
+
   // Create environment object with CLICY_QUIET set to true
   const env = { ...process.env, CLICY_QUIET: 'true' };
 
