@@ -1,12 +1,22 @@
-import express from 'express';
-import bodyParser from 'body-parser';
-import { 
+// @ts-nocheck
+// Use CommonJS require for better compatibility
+const express = require('express');
+const bodyParser = require('body-parser');
+const { 
   writeCommandToFile, 
   exportAllToCodeFile, 
   readCommandsFromFile,
   readCommandsFromHistoryFile,
   writeCommandToHistoryFile
-} from '../utils/fileWriter';
+} = require('../utils/fileWriter');
+
+// Type definitions for TypeScript
+// Using JSDoc comments for type definitions to avoid ES module imports
+/**
+ * @typedef {import('express').Request} ExpressRequest
+ * @typedef {import('express').Response} ExpressResponse
+ * @typedef {import('express').NextFunction} ExpressNextFunction
+ */
 
 const app = express();
 const PORT = 4000;
@@ -16,7 +26,7 @@ app.use(bodyParser.json());
 app.use(express.static('public'));
 
 // Enable CORS for Cypress
-app.use((req, res, next) => {
+app.use((/** @type {ExpressRequest} */ req, /** @type {ExpressResponse} */ res, /** @type {ExpressNextFunction} */ next) => {
   res.header('Access-Control-Allow-Origin', '*');
   res.header('Access-Control-Allow-Headers', 'Origin, X-Requested-With, Content-Type, Accept');
   res.header('Access-Control-Allow-Methods', 'GET, POST, OPTIONS');
@@ -27,7 +37,7 @@ app.use((req, res, next) => {
 });
 
 // Get all commands
-app.get('/commands', (req, res) => {
+app.get('/commands', (/** @type {ExpressRequest} */ req, /** @type {ExpressResponse} */ res) => {
   try {
     const commands = readCommandsFromFile();
     res.json({ success: true, commands });
@@ -38,7 +48,7 @@ app.get('/commands', (req, res) => {
 });
 
 // Get command history
-app.get('/history', (req, res) => {
+app.get('/history', (/** @type {ExpressRequest} */ req, /** @type {ExpressResponse} */ res) => {
   try {
     const commands = readCommandsFromHistoryFile();
     res.json({ success: true, commands });
@@ -49,7 +59,7 @@ app.get('/history', (req, res) => {
 });
 
 // Add a new command
-app.post('/command', (req, res) => {
+app.post('/command', (/** @type {ExpressRequest} */ req, /** @type {ExpressResponse} */ res) => {
   try {
     const { command } = req.body;
 
@@ -70,7 +80,7 @@ app.post('/command', (req, res) => {
 });
 
 // Export all commands to a file
-app.post('/export', (req, res) => {
+app.post('/export', (/** @type {ExpressRequest} */ req, /** @type {ExpressResponse} */ res) => {
   try {
     const commands = readCommandsFromFile();
     exportAllToCodeFile(commands);
@@ -82,7 +92,7 @@ app.post('/export', (req, res) => {
 });
 
 // Reset all commands
-app.post('/reset', (req, res) => {
+app.post('/reset', (/** @type {ExpressRequest} */ req, /** @type {ExpressResponse} */ res) => {
   try {
     // Reset the Cypress test file
     writeCommandToFile('', []);

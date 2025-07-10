@@ -48,7 +48,25 @@ export function injectCliCy(on: any, config: any): any {
 
   // Start the server immediately instead of waiting for browser launch
   // This ensures the server is running before tests start
-  startServer();
+  console.log('[CliCy] Starting server from plugin...');
+
+  try {
+    const server = startServer();
+
+    if (!server) {
+      console.warn('[CliCy] Failed to start server. Commands may not work properly.');
+      console.warn('[CliCy] Try running the server manually with one of these methods:');
+      console.warn('[CliCy] Method 1: Build and run with Node.js (recommended)');
+      console.warn('[CliCy]   1. Build the project: npm run build');
+      console.warn('[CliCy]   2. Run the server: node node_modules/clicy/dist/cli/server.js');
+      console.warn('[CliCy] Method 2: Run directly with ts-node (if TypeScript is installed)');
+      console.warn('[CliCy]   - Run: npx ts-node --transpile-only node_modules/clicy/cli/server.ts');
+      console.warn('[CliCy] Then in a separate terminal, run Cypress: npx cypress open');
+    }
+  } catch (error) {
+    console.error('[CliCy] Error starting server:', error);
+    console.warn('[CliCy] Please start the server manually using one of the methods above.');
+  }
 
   // Also set up the server lifecycle hooks for proper cleanup
   setupServerHooks(on);
@@ -326,30 +344,72 @@ function startServer(): any {
 
   console.log('[CliCy] Starting server...');
 
-  // Set environment variable to hide server startup message
-  process.env.CLICY_QUIET = 'true';
 
-  // Check if ts-node is available
-  const serverPath = path.resolve(__dirname, '../../cli/server.ts');
-  const serverJsPath = path.resolve(__dirname, '../../dist/cli/server.js');
+  // Try to resolve the server path using require.resolve
+  let serverPath;
+  let serverJsPath;
 
-  // Create environment object with CLICY_QUIET set to true
-  const env = { ...process.env, CLICY_QUIET: 'true' };
+  try {
+    // First try to resolve from the installed package
+    serverJsPath = require.resolve('clicy/dist/cli/server.js');
+    console.log('[CliCy] Resolved server JS path:', serverJsPath);
+  } catch (error) {
+    // Fallback to relative paths for development
+    console.log('[CliCy] Could not resolve server JS path, falling back to relative paths');
+
+    try {
+      // Try to resolve the package root
+      const packageRoot = path.dirname(require.resolve('clicy/package.json'));
+      serverPath = path.join(packageRoot, 'cli', 'server.ts');
+      serverJsPath = path.join(packageRoot, 'dist', 'cli', 'server.js');
+    } catch (error) {
+      // If that fails, use paths relative to the current file
+      console.log('[CliCy] Could not resolve package root, using relative paths');
+      serverPath = path.resolve(__dirname, '../../cli/server.ts');
+      serverJsPath = path.resolve(__dirname, '../../dist/cli/server.js');
+    }
+  }
+
+  // Additional logging to help debug path resolution issues
+  console.log('[CliCy] Looking for server files...');
+  if (serverJsPath) {
+    console.log(`  - ${serverJsPath} ${fs.existsSync(serverJsPath) ? 'found' : 'not found'}`);
+  }
+  if (serverPath) {
+    console.log(`  - ${serverPath} ${fs.existsSync(serverPath) ? 'found' : 'not found'}`);
+  }
+
+  // Use the current environment so server output is visible
+  const env = { ...process.env };
 
   const { spawn } = require('child_process');
 
   try {
-    if (fs.existsSync(serverPath)) {
-      // Use ts-node for development
-      console.log('[CliCy] Using development server path:', serverPath);
-      serverProcess = spawn('npx', ['ts-node', serverPath], {
+    // If we resolved the serverJsPath using require.resolve, use it directly
+    if (serverJsPath && serverJsPath.includes('node_modules')) {
+      console.log('[CliCy] Using resolved production server path:', serverJsPath);
+      serverProcess = spawn('node', [serverJsPath], {
         stdio: 'inherit', // Show console window for better debugging
         shell: true,
         detached: false, // Keep process attached to parent
         env,
         windowsHide: false // Make sure window is visible on Windows
       });
-    } else if (fs.existsSync(serverJsPath)) {
+    } 
+    // Otherwise, check if the development path exists
+    else if (serverPath && fs.existsSync(serverPath)) {
+      // Use ts-node for development with --transpile-only flag to avoid TypeScript errors
+      console.log('[CliCy] Using development server path with ts-node:', serverPath);
+      serverProcess = spawn('npx', ['ts-node', '--transpile-only', serverPath], {
+        stdio: 'inherit', // Show console window for better debugging
+        shell: true,
+        detached: false, // Keep process attached to parent
+        env,
+        windowsHide: false // Make sure window is visible on Windows
+      });
+    } 
+    // Otherwise, check if the production path exists
+    else if (serverJsPath && fs.existsSync(serverJsPath)) {
       // Use compiled JS for production
       console.log('[CliCy] Using production server path:', serverJsPath);
       serverProcess = spawn('node', [serverJsPath], {
@@ -359,15 +419,49 @@ function startServer(): any {
         env,
         windowsHide: false // Make sure window is visible on Windows
       });
-    } else {
-      console.error('[CliCy] Server file not found. Please make sure the project is set up correctly.');
-      return null;
+    } 
+    // If none of the above worked, try to use the server.js directly from the package
+    else {
+      try {
+        const packagePath = require.resolve('clicy/package.json');
+        const packageDir = path.dirname(packagePath);
+        const serverJsPath = path.join(packageDir, 'dist', 'cli', 'server.js');
+
+        if (fs.existsSync(serverJsPath)) {
+          console.log('[CliCy] Using package server path:', serverJsPath);
+          serverProcess = spawn('node', [serverJsPath], {
+            stdio: 'inherit',
+            shell: true,
+            detached: false,
+            env,
+            windowsHide: false
+          });
+        } else {
+          console.error('[CliCy] Server file not found. Please make sure the project is set up correctly.');
+          return null;
+        }
+      } catch (error) {
+        console.error('[CliCy] Server file not found. Please make sure the project is set up correctly.');
+        return null;
+      }
     }
 
     // Handle server process errors
     serverProcess.on('error', (error: Error) => {
       console.error('[CliCy] Failed to start server:', error);
       serverProcess = null;
+    });
+
+    // Handle server process exit
+    serverProcess.on('exit', (code: number, signal: string) => {
+      if (code !== 0) {
+        console.error(`[CliCy] Server process exited with code ${code} and signal ${signal}`);
+        console.error('[CliCy] This may indicate a problem with the server configuration or environment.');
+        serverProcess = null;
+      } else if (signal) {
+        console.log(`[CliCy] Server process was terminated with signal ${signal}`);
+        serverProcess = null;
+      }
     });
 
     // Verify the server is running by checking if the process is still alive

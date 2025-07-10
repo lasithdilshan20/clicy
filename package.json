@@ -1,6 +1,6 @@
 {
   "name": "clicy",
-  "version": "0.1.6",
+  "version": "1.0.0",
   "description": "Cypress-based CLI automation tool with REPL",
   "main": "dist/cli/repl.js",
   "bin": {
@@ -37,6 +37,7 @@
     "cypress:open": "cypress open",
     "cypress:run": "cypress run",
     "clicy:server": "ts-node cli/server.ts",
+    "clicy:server:node": "node dist/cli/server.js",
     "clicy:test": "cypress open --e2e --browser chrome",
     "clicy:start": "ts-node start.ts",
     "test": "jest",

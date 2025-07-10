@@ -1,5 +1,7 @@
-import fs from 'fs';
-import path from 'path';
+// @ts-nocheck
+// Use CommonJS require for better compatibility
+const fs = require('fs');
+const path = require('path');
 
 // Color constants for console output
 const colors = {
@@ -18,7 +20,11 @@ const historyPath = path.join(process.cwd(), 'clicy-history.json');
 
 const commandsRegex = /it\([^{]*{([\s\S]*?)}\);/;
 
-export function writeCommandToHistoryFile(commands: string[]) {
+/**
+ * Writes commands to the history file
+ * @param {string[]} commands - Array of commands to write
+ */
+function writeCommandToHistoryFile(commands: string[]): void {
   try {
     // Create history file if it doesn't exist
     if (!fs.existsSync(historyPath)) {
@@ -33,7 +39,11 @@ export function writeCommandToHistoryFile(commands: string[]) {
   }
 }
 
-export function readCommandsFromHistoryFile(): string[] {
+/**
+ * Reads commands from the history file
+ * @returns {string[]} Array of commands
+ */
+function readCommandsFromHistoryFile(): string[] {
   try {
     if (!fs.existsSync(historyPath)) {
       return [];
@@ -48,7 +58,12 @@ export function readCommandsFromHistoryFile(): string[] {
   }
 }
 
-export function writeCommandToFile(cmd: string, allCommands: string[] = []) {
+/**
+ * Writes a command to the spec file
+ * @param {string} cmd - Command to write
+ * @param {string[]} allCommands - All commands to include
+ */
+function writeCommandToFile(cmd: string, allCommands: string[] = []): void {
   const commands = allCommands.length > 0 ? [...allCommands] : [cmd];
 
   const content = `
@@ -66,7 +81,11 @@ describe('Live Test', () => {
   console.log(`\n${colors.cyan}Executing in Cypress: ${cmd}${colors.reset}`);
 }
 
-export function readCommandsFromFile(): string[] {
+/**
+ * Reads commands from the spec file
+ * @returns {string[]} Array of commands
+ */
+function readCommandsFromFile(): string[] {
   try {
     if (!fs.existsSync(specPath)) {
       return [];
@@ -81,8 +100,8 @@ export function readCommandsFromFile(): string[] {
 
     const commands = match[1]
       .split('\n')
-      .map(line => line.trim())
-      .filter(line => line && !line.startsWith('//'));
+      .map((line: string) => line.trim())
+      .filter((line: string) => line && !line.startsWith('//'));
 
     return commands;
   } catch (error) {
@@ -91,7 +110,11 @@ export function readCommandsFromFile(): string[] {
   }
 }
 
-export function exportAllToCodeFile(commands: string[]) {
+/**
+ * Exports all commands to a code file
+ * @param {string[]} commands - Array of commands to export
+ */
+function exportAllToCodeFile(commands: string[]): void {
   const code = `
 describe('Generated from CLICY', () => {
   it('runs all steps', () => {
@@ -102,3 +125,13 @@ describe('Generated from CLICY', () => {
   fs.writeFileSync(exportPath, code);
   console.log(`${colors.green}Code exported to ${exportPath}${colors.reset}`);
 }
+
+// Export all functions using CommonJS module.exports
+// @ts-ignore
+module.exports = {
+  writeCommandToHistoryFile,
+  readCommandsFromHistoryFile,
+  writeCommandToFile,
+  readCommandsFromFile,
+  exportAllToCodeFile
+};

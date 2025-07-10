@@ -1,7 +1,8 @@
 import repl from 'repl';
 import fs from 'fs';
 import path from 'path';
-import { writeCommandToFile, exportAllToCodeFile, readCommandsFromFile } from '../utils/fileWriter';
+// Use CommonJS require for fileWriter
+const { writeCommandToFile, exportAllToCodeFile, readCommandsFromFile } = require('../utils/fileWriter');
 import * as dslCommands from '../commands/dsl';
 
 // Enhanced color constants for futuristic UI
@@ -14,7 +15,7 @@ const colors = {
   red: '\u001b[31m',
   magenta: '\u001b[35m',
   reset: '\u001b[0m',
-  
+
   // Bright variants
   brightCyan: '\u001b[96m',
   brightBlue: '\u001b[94m',
@@ -22,12 +23,12 @@ const colors = {
   brightYellow: '\u001b[93m',
   brightRed: '\u001b[91m',
   brightMagenta: '\u001b[95m',
-  
+
   // Background colors
   bgBlack: '\u001b[40m',
   bgBlue: '\u001b[44m',
   bgCyan: '\u001b[46m',
-  
+
   // Text styles
   bold: '\u001b[1m',
   dim: '\u001b[2m',
@@ -63,7 +64,7 @@ function updateCommandHistoryFromFile() {
 
     commandHistory.length = 0;
 
-    commands.forEach(cmd => {
+    commands.forEach((cmd: string) => {
       commandHistory.push(cmd);
     });
 
@@ -83,12 +84,12 @@ console.log(banner);
 function printSeparator(message = '') {
   const lineLength = 60;
   const msgLength = message.length;
-  
+
   if (msgLength === 0) {
     console.log(`${colors.dim}${'─'.repeat(lineLength)}${colors.reset}`);
     return;
   }
-  
+
   const sideLength = Math.floor((lineLength - msgLength - 2) / 2);
   const leftSide = '─'.repeat(sideLength);
   const rightSide = '─'.repeat(lineLength - sideLength - msgLength - 2);
@@ -122,12 +123,12 @@ console.log(banner);
 function printSeparator(message = '') {
   const lineLength = 60;
   const msgLength = message.length;
-  
+
   if (msgLength === 0) {
     console.log(`${colors.dim}${'─'.repeat(lineLength)}${colors.reset}`);
     return;
   }
-  
+
   const sideLength = Math.floor((lineLength - msgLength - 2) / 2);
   const leftSide = '─'.repeat(sideLength);
   const rightSide = '─'.repeat(lineLength - sideLength - msgLength - 2);
