@@ -18,13 +18,34 @@ function startServer() {
   // Set environment variable to hide server startup message
   const env = { ...process.env, CLICY_QUIET: process.env.CLICY_QUIET || 'false' };
 
-  const serverProcess = spawn('npx', ['ts-node', 'cli/server.ts'], {
-    stdio: isQuietMode ? 'ignore' : 'inherit',
-    shell: true,
-    env,
-    windowsHide: true,
-    detached: true // Added this option
-  });
+  // Check if the compiled JavaScript file exists
+  const serverJsPath = path.join(process.cwd(), 'dist', 'cli', 'server.js');
+  const serverTsPath = path.join(process.cwd(), 'cli', 'server.ts');
+
+  let serverProcess;
+
+  if (fs.existsSync(serverJsPath)) {
+    // Use the compiled JavaScript file if it exists
+    console.log('Using compiled JavaScript server file');
+    serverProcess = spawn('node', [serverJsPath], {
+      stdio: isQuietMode ? 'ignore' : 'inherit',
+      shell: true,
+      env,
+      windowsHide: true,
+      detached: true
+    });
+  } else {
+    // Fall back to ts-node if the compiled file doesn't exist
+    console.log('Compiled JavaScript server file not found, falling back to ts-node');
+    console.log('Consider running "npm run build" first for better performance');
+    serverProcess = spawn('npx', ['ts-node', serverTsPath], {
+      stdio: isQuietMode ? 'ignore' : 'inherit',
+      shell: true,
+      env,
+      windowsHide: true,
+      detached: true
+    });
+  }
 
   serverProcess.on('error', (error) => {
     console.error('Failed to start server:', error);

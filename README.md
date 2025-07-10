@@ -217,7 +217,37 @@ If the automatic setup doesn't work for your project:
 
 1. Check that your Cypress configuration file (cypress.config.js or cypress.config.ts) was properly updated during installation
 2. Try running `npx cypress open` with the `--config-file` option to specify your configuration file
-3. If all else fails, you can manually set up CliCy by following the "Manual Setup" instructions in the Getting Started section
+3. If you're having issues with the server not starting when running Cypress, try starting the server manually using one of these methods:
+
+   **Method 1: Build and run with Node.js (recommended)**
+   ```bash
+   # First build the project
+   npm run build
+
+   # Then run the server using Node.js
+   npm run clicy:server:node
+
+   # Or run it directly with Node.js
+   node node_modules/clicy/dist/cli/server.js
+   ```
+
+   **Method 2: Run directly with ts-node (if TypeScript is installed)**
+   ```bash
+   # Run with ts-node and the --transpile-only flag to avoid TypeScript errors
+   npx ts-node --transpile-only node_modules/clicy/cli/server.ts
+   ```
+
+   Then in a separate terminal, run Cypress:
+   ```bash
+   npx cypress open
+   ```
+
+   **Troubleshooting server startup issues:**
+   - If you see an error like "Cannot use import statement outside a module", use Method 1 (build first)
+   - If you see TypeScript errors, use Method 2 with the --transpile-only flag
+   - Make sure port 4000 is not in use by another application
+   - Check that you have the necessary permissions to start a server
+4. If all else fails, you can manually set up CliCy by following the "Manual Setup" instructions in the Getting Started section
 
 ---
 
