@@ -146,7 +146,7 @@ export default defineConfig({
 - In-browser REPL panel with preview
 - Integrated with Cypress auto-run
 
-![CliCy Interface Preview](public/clicy-01.png)
+![CliCy Interface Preview](public/clicy-gif.gif)
 ---
 
 ## Supported DSL Commands
